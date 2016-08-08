@@ -6092,14 +6092,14 @@ input.switch:checked ~ label:after {
             margin: 0 0 17px 0;
             position: relative;
             text-align: center;
-            width: 99px; }
+            width: 120px; }
+            .scan-studio .mesh-thumbnail .mesh-thumbnail-item:hover {
+                background: #777; }
         .scan-studio .mesh-thumbnail .mesh-thumbnail-no {
             height: 100%;
             width: 100%; }
             .scan-studio .mesh-thumbnail .mesh-thumbnail-no::before {
                 content: "#"; }
-            .scan-studio .mesh-thumbnail .mesh-thumbnail-no:hover {
-                background: #777; }
         .scan-studio .mesh-thumbnail .mesh-thumbnail-close {
             background: rgba(0, 0, 0, 0.3);
             border-radius: 50%;
@@ -6110,6 +6110,14 @@ input.switch:checked ~ label:after {
             width: 20px; }
             .scan-studio .mesh-thumbnail .mesh-thumbnail-close::before {
                 line-height: 20px; }
+        .scan-studio .mesh-thumbnail .mesh-thumbnail-control {
+            display: -webkit-box;
+            /* OLD - iOS 6-, Safari 3.1-6 */
+            display: -webkit-flex;
+            /* NEW - Chrome */
+            display: flex;
+            /* NEW, Spec - Opera 12.1, Firefox 20+ */
+            justify-content: space-around; }
         .scan-studio .mesh-thumbnail .choose {
             background: #333; }
     .scan-studio .action-buttons .btn {
