@@ -6,9 +6,8 @@ define([
     'jquery',
     'helpers/websocket',
     'helpers/file-system',
-    'helpers/point-cloud',
     'helpers/rsa-key'
-], function($, Websocket, fileSystem, PointCloudHelper, rsaKey) {
+], function($, Websocket, fileSystem, rsaKey) {
     'use strict';
 
     return function(uuid, opts) {
@@ -189,9 +188,6 @@ define([
 
                 var next_left = 0,
                     next_right = 0,
-                    opts = {
-                        onProgress: onRendering
-                    },
                     command = '',
                     totalSteps = resolution - steps,
                     runScan = function() {
@@ -205,7 +201,8 @@ define([
                     },
                     handleScanResponse = function(data) {
                         if (data instanceof Blob) {
-                            pointCloud.push(data, next_left, next_right, opts);
+                            pointCloud.push(data, next_left, next_right);
+                            onRendering(pointCloud.get(), resolution - totalSteps);
                         }
                         else if ('chunk' === data.status) {
                             next_left = parseInt(data.left, 10) * 24;
@@ -267,7 +264,7 @@ define([
                     $scanDeferred.reject(response);
                 });
 
-                return $scanDeferred;
+                return $scanDeferred.promise();
             },
 
             stopScan: function() {

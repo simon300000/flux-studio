@@ -13,28 +13,13 @@ define(function() {
             };
 
         return {
-            push: function(data, left_len, right_len, opts) {
-                opts = opts || {};
-                opts.onProgress = opts.onProgress || function() {};
-
-                var fileReader = new FileReader(),
-                    blobs_len = 0,
-                    typedArray, blob;
+            push: function(data, leftLen, rightLen) {
 
                 if (true === data instanceof Blob) {
                     blobs.push(data);
-                    blobs_len = blobs.length;
 
-                    chunk.right.push(data.slice(0, left_len));
-                    chunk.left.push(data.slice(left_len, left_len + right_len));
-
-                    fileReader.onload = function() {
-                        typedArray = new Float32Array(this.result);
-                        opts.onProgress(typedArray, blobs_len);
-                    };
-
-                    blob = new Blob(blobs);
-                    fileReader.readAsArrayBuffer(blob);
+                    chunk.right.push(data.slice(0, leftLen));
+                    chunk.left.push(data.slice(leftLen, leftLen + rightLen));
                 }
                 else {
                     // TODO: throw exception?
