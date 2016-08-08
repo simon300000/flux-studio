@@ -125,6 +125,8 @@ define([
 
     function refreshPosition(mesh, objectChange, delay) {
         return function() {
+            mesh.geometry.computeBoundingBox();
+
             var matrixValue = matrix(mesh),
                 timer,
                 objectScreenPosition = toScreenPosition(mesh, camera, container);
@@ -147,7 +149,6 @@ define([
         objectChange = objectChange || function() {};
 
         var setMode = function(mode) {
-                mesh = createTransformControls(mesh);
                 mesh.transformControl.setMode(mode);
 
                 render();
@@ -176,7 +177,7 @@ define([
                     scene.add(transformControl);
 
                     mesh.transformControl = transformControl;
-                    mesh.transform = methods;
+                    mesh.transformMethods = methods;
                 }
 
                 return mesh;
@@ -184,21 +185,24 @@ define([
             methods = {
                 hide: function() {
                     mesh.transformControl.visible = false;
-                    // avoid overlay to other transform control even this control was visible
-                    mesh.transformControl.size = 0.1;
+
                     render();
 
                     return methods;
                 },
                 show: function() {
                     mesh.transformControl.visible = true;
-                    mesh.transformControl.size = 1;
                     render();
 
                     return methods;
                 },
                 remove: function() {
-                    mesh.transformControl.detach(mesh);
+                    if (undefined !== mesh.transformControl) {
+                        mesh.transformControl.detach(mesh);
+                        scene.remove(mesh.transformControl);
+                    }
+
+                    mesh.transformControl = undefined;
                     render();
 
                     return methods;
@@ -223,6 +227,7 @@ define([
                 }
             };
 
+        mesh = createTransformControls(mesh);
         // default mode
         methods.translate();
 
@@ -292,10 +297,6 @@ define([
     function addMesh(mesh) {
         scene.add(mesh);
 
-        if ('undefined' !== typeof mesh.transformControl) {
-            scene.add(mesh.transformControl);
-        }
-
         render();
     }
 
@@ -343,28 +344,69 @@ define([
         return geometry;
     }
 
-    function appendModel(model_data) {
-        var material, mesh,
-            geometry = new THREE.BufferGeometry();
+    function appendModel(model_data, leftLen, rightLen) {
+        var meshAll, leftChildMesh, rightChildMesh,
+            materialAll,
+            materialLeft,
+            materialRight,
+            geometryAll = new THREE.BufferGeometry(),
+            geometryLeft = new THREE.BufferGeometry(),
+            geometryRight = new THREE.BufferGeometry(),
+            materialSettings = {
+                size: 0.5,
+                opacity: 0.6,
+                transparent: true,
+                vertexColors: THREE.VertexColors
+            };
 
-        setupGeometry(model_data, geometry);
+        materialAll = new THREE.PointCloudMaterial(Object.create(materialSettings));
+        materialLeft = new THREE.PointCloudMaterial(Object.create(materialSettings));
+        materialRight = new THREE.PointCloudMaterial(Object.create(materialSettings));
 
-        material = new THREE.PointCloudMaterial({
-            size: 0.5,
-            opacity: 0.6,
-            transparent: true,
-            vertexColors: THREE.VertexColors
-        });
+        meshAll = new THREE.PointCloud(
+            setupGeometry(model_data, geometryAll),
+            materialAll
+        );
+        meshAll.material.visible = false;
 
-        mesh = new THREE.PointCloud( geometry, material );
+        leftChildMesh = new THREE.PointCloud(
+            setupGeometry(model_data.slice(0, leftLen), geometryLeft),
+            materialLeft
+        );
+        leftChildMesh.side = 'left';
 
-        addMesh( mesh );
+        rightChildMesh = new THREE.PointCloud(
+            setupGeometry(model_data.slice(leftLen, leftLen + rightLen), geometryRight),
+            materialRight
+        );
+        rightChildMesh.side = 'right';
 
-        return mesh;
+        meshAll.add(leftChildMesh);
+        meshAll.add(rightChildMesh);
+
+        addMesh(meshAll);
+
+        window.render = render;
+
+        return meshAll;
     }
 
-    function updateMesh(mesh, model_data) {
-        mesh.geometry = setupGeometry(model_data, mesh.geometry);
+    function updateMesh(mesh, model_data, leftLen, rightLen) {
+        // both side
+        mesh.geometry = setupGeometry(
+            model_data,
+            mesh.geometry
+        );
+        // left side
+        mesh.children[0].geometry = setupGeometry(
+            model_data.slice(0, leftLen),
+            mesh.children[0].geometry
+        );
+        // right side
+        mesh.children[1].geometry = setupGeometry(
+            model_data.slice(leftLen, leftLen + rightLen),
+            mesh.children[1].geometry
+        );
 
         render();
 
