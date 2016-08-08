@@ -62,6 +62,8 @@ define([
 
         var meshUpdateStream = new Rx.Subject(),
             meshAddRemoveStream = new Rx.Subject(),
+            LEFT_INDEX = 0,
+            RIGHT_INDEX = 1,
             subscriber,
             meshAddRemoveSubscriber;
 
@@ -122,7 +124,7 @@ define([
                             mesh.type = 'update';
                             mesh.arrayIndex = arrayIndex;
                             self.setState({
-                               history: self.state.history.concat([mesh])
+                                history: self.state.history.concat([mesh])
                             });
                         },
                         fireUndo = function() {
@@ -229,13 +231,10 @@ define([
                                 }
                             },
                             update: function(mesh) {
-                                var fileReader = new FileReader(),
-                                    meshes = self.state.meshes,
-                                    newMesh = {},
-                                    typedArray;
+                                var meshes = self.state.meshes,
+                                    newMesh = {};
 
-                                fileReader.onload = function() {
-
+                                self._convertFromBlob(mesh.oldBlob).done((data) => {
                                     // remove current
                                     currentMesh = self._getMesh(mesh.index);
                                     currentMesh.isUndo = true;
@@ -243,7 +242,7 @@ define([
                                     self._onDeleteMesh(mesh.arrayIndex, currentMesh);
 
                                     // add old
-                                    typedArray = new Float32Array(this.result);
+                                    typedArray = new Float32Array(data);
 
                                     // update point cloud
                                     mesh.model = scanedModel.updateMesh(mesh.model, typedArray);
@@ -264,9 +263,7 @@ define([
                                     }, () => {
                                         meshAddRemoveStream.onNext([{mesh: newMesh, type:'add'}]);
                                     });
-                                };
-
-                                fileReader.readAsArrayBuffer(mesh.oldBlob);
+                                });
                             },
                             remove: function(mesh) {
                                 // add
@@ -316,7 +313,7 @@ define([
                         self.setState(self.getInitialState());
                         scanedModel.clear();
                         self.state.scanCtrlWebSocket.stopGettingImage().done(function() {
-                           self.state.scanCtrlWebSocket.connection.close(false);
+                            self.state.scanCtrlWebSocket.connection.close(false);
                         });
                         break;
                     }
@@ -352,7 +349,6 @@ define([
                 _importPCD: function(e, files) {
                     var self = this,
                         lang = self.state.lang,
-                        fileReader,
                         fileName,
                         meshes = self.state.meshes,
                         allowedfiles = [],
@@ -361,8 +357,6 @@ define([
                         file,
                         blob,
                         scanTimes,
-                        typedArray,
-                        fileReader,
                         model,
                         doImport,
                         checkFiles = function(files) {
@@ -412,7 +406,7 @@ define([
 
                         doImport = function() {
                             file = allowedfiles.pop();
-                            fileName = (new Date).getTime();
+                            fileName = (new Date()).getTime();
                             blob = file.blob || new Blob([file]);
                             scanTimes = self.state.scanTimes + 1;
 
@@ -421,9 +415,8 @@ define([
 
                                 fileReader = new FileReader();
 
-                                fileReader.onload = function() {
-                                    typedArray = new Float32Array(this.result);
-                                    model = scanedModel.appendModel(typedArray);
+                                self._convertFromBlob(pointCloud.total).done((data) => {
+                                    model = scanedModel.appendModel(data);
 
                                     meshes.push(self._newMesh({
                                         name: fileName,
@@ -442,11 +435,7 @@ define([
                                             self._openBlocker(false);
                                         }
                                     });
-                                };
-
-                                fileReader.readAsArrayBuffer(pointCloud.total);
-
-
+                                });
                             });
                         };
 
@@ -520,10 +509,14 @@ define([
 
                     return {
                         model: args.model || undefined,
+                        activeModel: args.model || undefined,
                         transformMethods: {
                             hide: function() {}
                         },
-                        name: args.name || '',
+                        name: args.name,
+                        left: args.name + '-left',
+                        right: args.name + '-right',
+                        side: 'both',   // left, right, both
                         index: args.index,
                         choose: false,
                         display: true,
@@ -531,7 +524,7 @@ define([
                     };
                 },
 
-                _onRendering: function(views, currentSteps, mesh) {
+                _onRendering: function(pointCloud, currentSteps, mesh) {
                     var self = this,
                         scan_speed = self._getScanSpeed(),
                         left_step = (scan_speed - currentSteps),
@@ -540,8 +533,43 @@ define([
                         elapsedTime = ((new Date()).getTime() - self.state.scanStartTime) / 1000,
                         meshes = self.state.meshes,
                         mesh = mesh || self._getMesh(self.state.scanTimes),
+                        fileReader = new FileReader(),
                         model,
                         transformMethods;
+
+                    self._convertFromBlob(pointCloud.total).done((data) => {
+
+                        if ('undefined' === typeof mesh) {
+                            model = scanedModel.appendModel(
+                                data,
+                                pointCloud.left.size / 4,
+                                pointCloud.right.size / 4
+                            );
+                            var newMesh = self._newMesh({
+                                name: 'scan-' + (new Date()).getTime(),
+                                model: model,
+                                index: self.state.scanTimes
+                            });
+                            newMesh.arrayIndex = meshes.length;
+                            meshes.push(newMesh);
+
+                            self.setState({
+                                meshes: meshes,
+                                progressPercentage: progressPercentage,
+                                progressRemainingTime: progressRemainingTime
+                            }, () => {
+                                meshAddRemoveStream.onNext([{mesh: newMesh, type: 'add'}]);
+                            });
+                        }
+                        else {
+                            mesh.model = scanedModel.updateMesh(
+                                mesh.model,
+                                data,
+                                pointCloud.left.size / 4,
+                                pointCloud.right.size / 4
+                            );
+                        }
+                    });
 
                     progressRemainingTime = parseInt((elapsedTime / currentSteps), 10) * left_step;
 
@@ -555,28 +583,6 @@ define([
                         progressPercentage: progressPercentage,
                         progressRemainingTime: progressRemainingTime
                     });
-
-                    if ('undefined' === typeof mesh) {
-                        model = scanedModel.appendModel(views);
-                        var newMesh = self._newMesh({
-                            name: 'scan-' + (new Date()).getTime(),
-                            model: model,
-                            index: self.state.scanTimes
-                        });
-                        newMesh.arrayIndex = meshes.length;
-                        meshes.push(newMesh);
-
-                        self.setState({
-                            meshes: meshes,
-                            progressPercentage: progressPercentage,
-                            progressRemainingTime: progressRemainingTime
-                        }, () => {
-                            meshAddRemoveStream.onNext([{mesh: newMesh, type: 'add'}]);
-                        });
-                    }
-                    else {
-                        mesh.model = scanedModel.updateMesh(mesh.model, views);
-                    }
                 },
 
                 _onRollback: function(e) {
@@ -751,10 +757,32 @@ define([
                     this._mergeAll(exportFile, false);
                 },
 
+                _convertFromBlob: function(data) {
+                    var blob = new Blob([data]),
+                        typedArray,
+                        fileReader,
+                        $deferred = $.Deferred();
+
+                    fileReader = new FileReader();
+
+                    fileReader.onload = function() {
+                        typedArray = new Float32Array(this.result);
+                        $deferred.resolve(typedArray);
+                    };
+
+                    fileReader.readAsArrayBuffer(blob);
+
+                    return $deferred.promise();
+                },
+
                 _onScanFinished: function(point_cloud) {
                     var self = this,
                         mesh = self._getMesh(self.state.scanTimes),
+                        uploadAction = self.state.scanModelingWebSocket.upload,
+                        subsetAction = self.state.scanModelingWebSocket.subset,
                         onUploadFinished = function() {
+                            mesh.point_cloud = point_cloud;
+
                             // update scan times
                             self.setState({
                                 openProgressBar: false,
@@ -769,16 +797,23 @@ define([
                             });
                         };
 
-                    self.state.scanModelingWebSocket.upload(
+                    self._openBlocker(true, ProgressConstants.NONSTOP);
+
+                    uploadAction(
                         mesh.name,
-                        point_cloud,
-                        {
-                            onStarting: function() {
-                                self._openBlocker(true, ProgressConstants.NONSTOP);
-                            },
-                            onFinished: onUploadFinished
-                        }
-                    );
+                        point_cloud
+                    ).
+                    then(() => subsetAction(
+                        mesh.name,
+                        mesh.name + '-left',
+                        'left'
+                    )).
+                    then(() => subsetAction(
+                        mesh.name,
+                        mesh.name + '-right',
+                        'right'
+                    )).
+                    done(onUploadFinished);
                 },
 
                 _handleCheck: function() {
@@ -832,13 +867,16 @@ define([
                                     }
                                 };
 
-                            $scanDeferred.done(function(response) {
+                            $scanDeferred.always(() => {
+                                self._openBlocker(false);
+                            }).
+                            done(function(response) {
                                 self._onScanFinished(response.pointCloud);
-                            }).fail(function(response) {
+                            }).
+                            fail(function(response) {
                                 self.setState({
                                     scanCtrlWebSocket: scanControl(self.state.selectedPrinter.uuid, opts)
                                 });
-
                             });
                         },
                         meshes = self.state.meshes,
@@ -905,29 +943,49 @@ define([
                 _doClearNoise: function(mesh) {
                     var self = this,
                         delete_noise_name = 'clear-noise-' + (new Date()).getTime(),
-                        onStarting = function(data) {
-                            self._openBlocker(true, ProgressConstants.NONSTOP);
-                        },
                         onDumpFinished = function(data) {
-                            mesh.oldName = mesh.name;
-                            mesh.name = delete_noise_name;
+                            console.log('data');
                             meshUpdateStream.onNext(mesh);
-                            self._openBlocker(false);
                         },
                         onDumpReceiving = function(data, len) {
                             self._onRendering(data, len, mesh);
-                        };
+                        },
+                        name = mesh.name,
+                        modelingMethods = self.state.scanModelingWebSocket,
+                        $deferred;
 
-                    self.state.scanModelingWebSocket.deleteNoise(
-                        mesh.name,
-                        delete_noise_name,
-                        0.3,
-                        {
-                            onStarting: onStarting,
-                            onFinished: onDumpFinished,
-                            onReceiving: onDumpReceiving
+                    if (-1 < ['left', 'right'].indexOf(mesh.side)) {
+                        name = mesh[mesh.side];
+                    }
+
+                    $deferred = modelingMethods.deleteNoise(name, delete_noise_name, 0.3);
+
+                    self._openBlocker(true, ProgressConstants.NONSTOP);
+
+                    $deferred.then((response) => {
+                        console.log(response);
+                        mesh.oldName = mesh.name;
+                        mesh.name = delete_noise_name;
+
+                        switch (mesh.side) {
+                        case 'left':
+                            return modelingMethods.merge(mesh.right, response.outName, delete_noise_name);
+                            break;
+                        case 'right':
+                            return modelingMethods.merge(mesh.left, response.outName, delete_noise_name);
+                            break;
+                        default:
+                            return $deferred;
                         }
-                    );
+                    }).
+                    then((response) => {
+                        console.log(mesh.name);
+                        return modelingMethods.dump(mesh.name, onDumpReceiving);
+                    }).
+                    always((response) => {
+                        self._openBlocker(false);
+                    }).
+                    done(onDumpFinished);
                 },
 
                 _doCropOn: function(mesh) {
@@ -941,16 +999,7 @@ define([
                     var self = this,
                         cut_name = 'cut-' + (new Date()).getTime(),
                         cylider_box = new THREE.Box3().setFromObject(self.state.cylinder),
-                        opts = {
-                            onStarting: function() {
-                                self._openBlocker(true, ProgressConstants.NONSTOP);
-                            },
-                            onReceiving: self._onRendering,
-                            onFinished: function(data) {
-                                mesh.transformMethods.show();
-                                self._openBlocker(false);
-                            }
-                        },
+                        point_cloud_name = ('both' !== mesh.side ? mesh[mesh.side] : mesh.name),
                         args = [
                             // min z
                             { mode: 'z', direction: 'True', value: cylider_box.min.z },
@@ -961,15 +1010,24 @@ define([
                         ];
 
                     if (window.confirm('Do crop?')) {
+                        self._openBlocker(true, ProgressConstants.NONSTOP);
 
                         self.state.scanModelingWebSocket.cut(
-                            mesh.name,
+                            point_cloud_name,
                             cut_name,
                             args,
-                            opts
-                        );
+                            self._onRendering
+                        ).
+                        always(() => {
+                            self._openBlocker(false);
+                        }).
+                        done((response) => {
+                            mesh.transformMethods.show();
+                        });
+
                         mesh.oldName = mesh.name;
                         mesh.name = cut_name;
+
                         meshUpdateStream.onNext(mesh);
                     }
 
@@ -983,19 +1041,11 @@ define([
                     });
                 },
 
-                _doApplyTransform: function(nextAction) {
-                    nextAction = nextAction || function() {};
-
+                _doApplyTransform: function(selectedMeshes) {
                     var self = this,
-                        selectedMeshes = self.state.selectedMeshes,
-                        endIndex = selectedMeshes.length - 1,
+                        $deferred = $.Deferred(),
                         currentIndex = 0,
-                        isEnd = function() {
-                            return (endIndex <= currentIndex);
-                        },
-                        doingApplyTransform = function() {
-                            currentMesh = selectedMeshes[currentIndex];
-
+                        doingApplyTransform = function(currentMesh) {
                             matrixValue = scanedModel.matrix(currentMesh.model);
                             params = {
                                 pX: matrixValue.position.center.x,
@@ -1006,41 +1056,47 @@ define([
                                 rZ: matrixValue.rotation.z
                             };
 
-                            // baseName, outName, params, onFinished
                             self.state.scanModelingWebSocket.applyTransform(
                                 currentMesh.name,
                                 currentMesh.name,
-                                params,
-                                onFinished
-                            );
-
-                        },
-                        onFinished = function() {
-                            if (false === isEnd()) {
-                                currentIndex++;
-                                doingApplyTransform();
-                            }
-                            else {
-                                nextAction();
-                            }
+                                params
+                            ).
+                            fail(() => {
+                                $deferred.reject();
+                            }).
+                            done(() => {
+                                currentIndex += 1;
+                                $deferred.notify(currentIndex++);
+                            });
                         },
                         params,
-                        currentMesh,
                         matrixValue;
 
-                    doingApplyTransform();
+                    $deferred.progress((index) => {
+                        var currentMesh = selectedMeshes[index];
+
+                        if ('undefined' !== typeof currentMesh) {
+                            doingApplyTransform(currentMesh);
+                        }
+                        else {
+                            $deferred.resolve();
+                        }
+                    });
+
+                    return $deferred.notify(currentIndex).promise();
                 },
 
                 _doManualMerge: function(selectedMeshes, callback, isNewMesh) {
                     isNewMesh = ('boolean' === typeof isNewMesh ? isNewMesh : true);
 
                     var self = this,
-                        meshes = this.state.meshes,
+                        $deferred = $.Deferred(),
+                        meshes = self.state.meshes,
                         selectedMeshes = (true === selectedMeshes instanceof Array ? selectedMeshes : this.state.selectedMeshes),
                         lengthSelectedMeshes = selectedMeshes.length,
                         outputName = '';
 
-                    self._doApplyTransform(function(response) {
+                    self._doApplyTransform(selectedMeshes).done((response) => {
                         var onMergeFinished = function(data) {
                                 if (false === isEnd()) {
                                     currentIndex++;
@@ -1066,32 +1122,30 @@ define([
 
                                 self.state.scanModelingWebSocket.dump(
                                     outputName,
-                                    {
-                                        onReceiving: function(typedArray, blobs_len) {
-                                            self._onRendering(typedArray, blobs_len);
-                                            deferred.resolve();
-                                        },
-                                        onFinished: function(response) {
-                                            self.state.selectedMeshes.forEach(function(selectedMesh, i) {
-                                                scanedModel.remove(selectedMesh.model);
-                                            });
+                                    (typedArray, blobs_len) => {
+                                        self._onRendering(typedArray, blobs_len);
+                                        deferred.resolve();
+                                    }).
+                                always(() => {
+                                    self._openBlocker(false);
+                                }).
+                                done((response) => {
+                                    self.state.selectedMeshes.forEach(function(selectedMesh, i) {
+                                        scanedModel.remove(selectedMesh.model);
+                                    });
 
-                                            for (var i = self.state.meshes.length - 1; i >= 0; i--) {
-                                                if (true === self.state.meshes[i].choose) {
-                                                    meshAddRemoveStream.onNext([{mesh: self.state.meshes[i], type: 'remove'}]);
-                                                    self.state.meshes.splice(i, 1);
-                                                }
-                                            }
-
-                                            self.setState({
-                                                meshes: self.state.meshes,
-                                                selectedMeshes: []
-                                            });
-
-                                            self._openBlocker(false);
+                                    for (var i = self.state.meshes.length - 1; i >= 0; i--) {
+                                        if (true === self.state.meshes[i].choose) {
+                                            meshAddRemoveStream.onNext([{mesh: self.state.meshes[i], type: 'remove'}]);
+                                            self.state.meshes.splice(i, 1);
                                         }
                                     }
-                                );
+
+                                    self.setState({
+                                        meshes: self.state.meshes,
+                                        selectedMeshes: []
+                                    });
+                                });
                             },
                             onMergeStarting = function() {
                                 self._openBlocker(true, ProgressConstants.NONSTOP);
@@ -1117,13 +1171,8 @@ define([
                                     self.state.scanModelingWebSocket.merge(
                                         baseName,
                                         targetMesh.name,
-                                        outputName,
-                                        {
-                                            onStarting: onMergeStarting,
-                                            onReceiving: self._onRendering,
-                                            onFinished: onMergeFinished
-                                        }
-                                    );
+                                        outputName
+                                    ).done(onMergeFinished);
                                 }
                                 else {
                                     afterMerge(baseMesh.name);
@@ -1139,6 +1188,7 @@ define([
                                 // take merge as scan
                                 scanTimes: (true === isNewMesh ? self.state.scanTimes + 1 : self.state.scanTimes)
                             }, function() {
+                                self._openBlocker(true, ProgressConstants.NONSTOP);
                                 doingMerge();
                             });
                         }
@@ -1150,7 +1200,7 @@ define([
 
                 _switchTransformMode: function(mode, e) {
                     var self = this,
-                        methods = self.state.selectedMeshes[0].transformMethods;
+                        methods = self.state.selectedMeshes[0].activeModel.transformMethods;
 
                     switch (mode) {
                     case 'scale':
@@ -1382,8 +1432,8 @@ define([
                 _renderManipulationPanel: function(lang) {
                     var state = this.state,
                         refreshMatrix = function(mesh, matrix) {
-                            mesh.model.position.set(matrix.position.x , matrix.position.y , matrix.position.z);
-                            mesh.model.rotation.set(matrix.rotation.x , matrix.rotation.y , matrix.rotation.z);
+                            mesh.activeModel.position.set(matrix.position.x , matrix.position.y , matrix.position.z);
+                            mesh.activeModel.rotation.set(matrix.rotation.x , matrix.rotation.y , matrix.rotation.z);
 
                             scanedModel.render();
                         };
@@ -1537,6 +1587,14 @@ define([
                     );
                 },
 
+                _rmTransformControl: function(mesh) {
+                    mesh.traverse((node) => {
+                        if (undefined !== node.transformMethods) {
+                            node.transformMethods.remove();
+                        }
+                    });
+                },
+
                 _renderMeshThumbnail: function(lang) {
                     var self = this,
                         thumbnails = [],
@@ -1544,62 +1602,129 @@ define([
                         cx = React.addons.classSet,
                         itemClass = {};
 
-                    thumbnails = meshes.map(function(mesh, i) {
-                        var onChooseMesh = function(e) {
-                                e.preventDefault();
+                    var onChangeSide = (e) => {
+                            var me = e.currentTarget,
+                                meshIndex = parseInt(me.dataset.index, 10),
+                                mesh = self._getMesh(meshIndex),
+                                left = self.refs['mesh-' + meshIndex + '-left'].getDOMNode(),
+                                right = self.refs['mesh-' + meshIndex + '-right'].getDOMNode(),
+                                opacity = (true === mesh.choose ? 1 : 0.3),
+                                activeModel,
+                                position,
+                                side = 'both';
 
-                                var me = e.currentTarget,
-                                    mesh = self._getMesh(parseInt(me.dataset.index, 10)),
-                                    position = scanedModel.toScreenPosition(mesh.model),
-                                    transformMethods = scanedModel.attachControl(mesh.model, self._refreshObjectDialogPosition),
-                                    selectedMeshes;
+                            if (false === left.checked && false === right.checked) {
+                                if (me === left) {
+                                    right.checked = true
+                                }
+                                else {
+                                    left.checked = true;
+                                }
+                            }
 
-                                mesh.transformMethods = transformMethods;
+                            side = (true === left.checked && false === right.checked ? 'left' : side);
+                            side = (false === left.checked && true === right.checked ? 'right' : side);
 
-                                meshes.forEach(function(mesh, key) {
-                                    self._removeCylinder(mesh);
+                            switch (side) {
+                            case 'left':
+                                activeModel = mesh.model.children[LEFT_INDEX];
+                                mesh.model.children[LEFT_INDEX].material.opacity = opacity;
+                                mesh.model.children[RIGHT_INDEX].material.opacity = 0.3;
+                                break;
+                            case 'right':
+                                activeModel = mesh.model.children[RIGHT_INDEX];
+                                mesh.model.children[RIGHT_INDEX].material.opacity = opacity;
+                                mesh.model.children[LEFT_INDEX].material.opacity = 0.3;
+                                break;
+                            default:
+                                activeModel = mesh.model;
+                                mesh.model.children[LEFT_INDEX].material.opacity = opacity;
+                                mesh.model.children[RIGHT_INDEX].material.opacity = opacity;
+                            }
 
-                                    if (false === e.shiftKey) {
-                                        if (key !== i) {
-                                            mesh.transformMethods.hide();
-                                            mesh.choose = false;
-                                            mesh.model.material.opacity = 0.3;
-                                        }
-                                    }
-                                    else {
-                                        mesh.transformMethods.hide();
-                                    }
-                                });
+                            scanedModel.render();
 
-                                // store selected mesh
-                                mesh.choose = !mesh.choose;
+                            mesh.activeModel = activeModel;
+                            mesh.side = side;
 
-                                mesh.model.material.opacity = (true === mesh.choose ? 1 : 0.3);
-
-                                selectedMeshes = meshes.filter(function(mesh) {
-                                    return true === mesh.choose;
-                                });
+                            if (true === mesh.choose) {
+                                self._rmTransformControl(mesh.model);
+                                scanedModel.attachControl(activeModel, self._refreshObjectDialogPosition);
+                                position = scanedModel.toScreenPosition(activeModel);
 
                                 self.setState({
-                                    selectedMeshes: selectedMeshes,
-                                    selectedObject: scanedModel.matrix(mesh.model),
+                                    selectedObject: scanedModel.matrix(activeModel),
                                     objectDialogPosition: {
                                         left: position.x,
                                         top: position.y
                                     }
-                                }, function() {
-                                    scanedModel.cylinder.remove();
-
-                                    if (1 === selectedMeshes.length && true === mesh.choose) {
-                                        mesh.transformMethods.show();
-                                    }
-                                    else {
-                                        mesh.transformMethods.hide();
-                                    }
-
-                                    scanedModel.render();
                                 });
-                            };
+                            }
+                        },
+                        onChooseMesh = function(e) {
+                            e.preventDefault();
+
+                            var me = e.currentTarget,
+                                mesh = self._getMesh(parseInt(me.dataset.index, 10)),
+                                position,
+                                selectedModel,
+                                selectedMeshes;
+
+                            selectedModel = mesh.activeModel;
+
+                            position = scanedModel.toScreenPosition(selectedModel);
+
+                            self._rmTransformControl(mesh.model);
+
+                            meshes.forEach((child) => {
+                                self._removeCylinder(child);
+
+                                if (false === e.shiftKey) {
+                                    if (mesh.index !== child.index) {
+                                        self._rmTransformControl(child.model);
+                                        child.choose = false;
+                                        selectedModel.material.opacity = 0.3;
+                                    }
+                                }
+                            });
+
+                            // store selected mesh
+                            mesh.choose = !mesh.choose;
+
+                            if (-1 < ['left', 'right'].indexOf(mesh.side)) {
+                                selectedModel.material.opacity = (true === mesh.choose ? 1 : 0.3);
+                            }
+                            else {
+                                mesh.model.children.forEach((child) => {
+                                    if (child.material) {
+                                        child.material.opacity = (true === mesh.choose ? 1 : 0.3);
+                                    }
+                                });
+                            }
+
+                            selectedMeshes = meshes.filter(function(mesh) {
+                                return true === mesh.choose;
+                            });
+
+                            self.setState({
+                                selectedMeshes: selectedMeshes,
+                                selectedObject: scanedModel.matrix(selectedModel),
+                                objectDialogPosition: {
+                                    left: position.x,
+                                    top: position.y
+                                }
+                            }, function() {
+                                scanedModel.cylinder.remove();
+
+                                if (1 === selectedMeshes.length && true === mesh.choose) {
+                                    scanedModel.attachControl(selectedModel, self._refreshObjectDialogPosition);
+                                }
+
+                                scanedModel.render();
+                            });
+                        };
+
+                    thumbnails = meshes.map(function(mesh, i) {
 
                         itemClass = {
                             'mesh-thumbnail-item': true,
@@ -1612,6 +1737,14 @@ define([
                                 <div className={cx(itemClass)}>
                                     <div className="mesh-thumbnail-no" data-index={mesh.index} onClick={onChooseMesh}>{mesh.index}</div>
                                     <div className="mesh-thumbnail-close fa fa-times" onClick={self._onDeletingMesh.bind(self, mesh, i)}></div>
+                                    <div className="mesh-thumbnail-control">
+                                        <label>
+                                            <input type="checkbox" ref={'mesh-' + mesh.index + '-left'} data-index={mesh.index} onClick={onChangeSide} value="left" defaultChecked="true"/>Left
+                                        </label>
+                                        <label>
+                                            <input type="checkbox" ref={'mesh-' + mesh.index + '-right'} data-index={mesh.index} onClick={onChangeSide} value="right" defaultChecked="true"/>Right
+                                        </label>
+                                    </div>
                                 </div>
                             )
                         }
