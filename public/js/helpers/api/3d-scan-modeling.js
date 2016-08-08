@@ -50,22 +50,19 @@ define([
         return {
             connection: ws,
             History: History,
-            upload: function(name, point_cloud, opts) {
-                opts.onStarting = opts.onStarting || function() {};
-                opts.onFinished = opts.onFinished || function() {};
-
-                if (24 > point_cloud.left.size + point_cloud.right.size) {
-                    opts.onFinished(false);
-                    return;
-                }
-
-                var order_name = 'upload',
+            upload: function(name, point_cloud) {
+                var $deferred = $.Deferred(),
+                    order_name = 'upload',
                     args = [
                         order_name,
                         name,
                         point_cloud.left.size / 24,
                         point_cloud.right.size / 24 || 0
                     ];
+
+                if (24 > point_cloud.left.size + point_cloud.right.size) {
+                    return $deferred.reject().promise();
+                }
 
                 events.onMessage = function(data) {
                     switch (data.status) {
@@ -75,15 +72,15 @@ define([
                         break;
                     case 'ok':
                         History.push(name, point_cloud.total);
-                        opts.onFinished(true);
+                        $deferred.resolve();
                         break;
                     }
 
                 };
 
-                opts.onStarting();
-
                 ws.send(args.join(' '));
+
+                return $deferred.promise();
             },
             /**
              * @param {String} in_name  - source name
@@ -92,40 +89,30 @@ define([
              *      [
              *          { <mode>, <direction>, <value> }, ...
              *      ]
+             * @param {Function} onReceiving - event progress
              */
-            cut: function(in_name, out_name, args, opts) {
-                opts = opts || {};
-                opts.onStarting = opts.onStarting || function() {};
-                opts.onFinished = opts.onFinished || function() {};
-
+            cut: function(in_name, out_name, args, onReceiving) {
                 var self = this,
+                    $deferred = $.Deferred(),
                     order_name = 'cut',
-                    timer = null,
-                    all_ok = false,
-                    next_arg = args.pop(),
+                    next_arg,
                     _args = [];
 
-                events.onMessage = function(data) {
+                events.onMessage = function(response) {
 
-                    switch (data.status) {
+                    switch (response.status) {
                     case 'ok':
-                        if (true === all_ok) {
-                            self.dump(
-                                out_name,
-                                opts
-                            );
-                        }
-                        else {
-                            next_arg = args.pop();
-                            // after first cut
-                            in_name = out_name;
-                        }
+                        $deferred.notify();
                         break;
+                    default:
+                        $deferred.reject();
                     }
 
                 };
 
-                timer = setInterval(function() {
+                $deferred.progress(() => {
+                    next_arg = args.pop();
+
                     if ('undefined' !== typeof next_arg) {
                         _args = [
                             order_name,
@@ -137,24 +124,23 @@ define([
                         ];
 
                         ws.send(_args.join(' '));
-                        next_arg = undefined;
+                        in_name = out_name;
                     }
-
-                    if (0 === args.length) {
-                        all_ok = true;
-                        clearInterval(timer);
+                    else {
+                        self.dump(
+                            out_name,
+                            onReceiving
+                        ).done((pointCloud) => {
+                            $deferred.resolve(pointCloud);
+                        });
                     }
                 }, 0);
 
-                opts.onStarting();
-
+                return $deferred.notify().promise();
             },
-            deleteNoise: function(in_name, out_name, c, opts) {
-                opts = opts || {};
-                opts.onFinished = opts.onFinished || function() {};
-                opts.onStarting = opts.onStarting || function() {};
-
+            deleteNoise: function(in_name, out_name, c) {
                 var self = this,
+                    $deferred = $.Deferred(),
                     order_name = 'delete_noise',
                     args = [
                         order_name,
@@ -163,28 +149,33 @@ define([
                         c = ('number' === typeof c ? c : 0.3)   // default by 0.3
                     ];
 
-                events.onMessage = function(data) {
+                events.onMessage = function(response) {
 
-                    switch (data.status) {
+                    switch (response.status) {
                     case 'ok':
-                        self.dump(
-                            out_name,
-                            opts
-                        );
+                        $deferred.resolve({
+                            outName: out_name
+                        });
+                        // self.dump(
+                        //     out_name,
+                        //     onReceiving
+                        // ).done((pointCloud) => {
+                        //     $deferred.resolve(onReceiving);
+                        // });
                         break;
+                    default:
+                        $deferred.reject(response);
                     }
 
                 };
 
                 ws.send(args.join(' '));
-                opts.onStarting();
-            },
-            autoMerge: function(base, target, output, opts) {
-                opts.onStarting = opts.onStarting || function() {};
-                opts.onFinished = opts.onFinished || function() {};
-                opts.onFail = opts.onFail || function() {};
 
+                return $deferred.promise();
+            },
+            autoMerge: function(base, target, output, onReceiving) {
                 var self = this,
+                    $deferred = $.Deferred(),
                     order_name = 'auto_merge',
                     args = [
                         order_name,
@@ -193,30 +184,32 @@ define([
                         output
                     ];
 
-                events.onMessage = function(data) {
+                events.onMessage = function(response) {
 
-                    switch (data.status) {
+                    switch (response.status) {
                     case 'ok':
                         self.dump(
                             output,
-                            opts
-                        );
+                            onReceiving
+                        ).done((pointCloud) => {
+                            $deferred.resolve(onReceiving);
+                        });
                         break;
-                    case 'fail':
-                        opts.onFail();
+                    default:
+                        $deferred.reject(response);
                         break;
                     }
 
                 };
 
-                opts.onStarting();
                 ws.send(args.join(' '));
-            },
-            merge: function(base, target, output, opts) {
-                opts.onStarting = opts.onStarting || function() {};
-                opts.onFinished = opts.onFinished || function() {};
 
+                return $deferred.promise();
+            },
+
+            merge: function(base, target, output) {
                 var self = this,
+                    $deferred = $.Deferred(),
                     order_name = 'merge',
                     args = [
                         order_name,
@@ -225,32 +218,33 @@ define([
                         output
                     ];
 
-                events.onMessage = function(data) {
-
-                    switch (data.status) {
+                events.onMessage = function(response) {
+                    switch (response.status) {
                     case 'ok':
-                        opts.onFinished();
+                        $deferred.resolve(response);
                         break;
+                    default:
+                        $deferred.reject(response);
                     }
-
                 };
 
-                opts.onStarting();
                 ws.send(args.join(' '));
+
+                return $deferred.promise();
             },
             /**
-             * @param {String} name - source name
-             * @param {Json}   opts - option parameters
-             *      {
-             *          onFinished <dump finished>
-             *          onReceiving <dump on progressing>
-             *      }
+             * @param {String}   name        - source name
+             * @param {Function} onReceiving - event onReceiving
+             * @param {String}   side        - which side that dump
+             *
+             * @return {Promise}
              */
-            dump: function(name, opts) {
-                opts.onFinished = opts.onFinished || function() {};
-                opts.onReceiving = opts.onReceiving || function() {};
+            dump: function(name, onReceiving, side) {
+                onReceiving = onReceiving || function() {};
+                side = side || 'both';
 
                 var order_name = 'dump',
+                    $deferred = $.Deferred(),
                     args = [
                         order_name,
                         name
@@ -259,7 +253,7 @@ define([
                     next_left = 0,
                     next_right = 0,
                     _opts = {
-                        onProgress: opts.onReceiving
+                        onProgress: onReceiving
                     };
 
                 events.onMessage = function(data) {
@@ -270,15 +264,26 @@ define([
                     else if ('continue' === data.status) {
                         next_left = parseInt(data.left, 10) * 24;
                         next_right = parseInt(data.right, 10) * 24;
+
+                        switch (side) {
+                        case 'left':
+                            next_left = next_left + next_right;
+                            break;
+                        case 'right':
+                            next_right = next_left + next_right;
+                            break;
+                        }
                     }
                     else if ('ok' === data.status) {
-                        History.push(name, pointCloud.get().total);
-                        opts.onFinished(pointCloud.get());
+                        History.push(name, pointCloud);
+                        $deferred.resolve(pointCloud.get());
                     }
 
                 };
 
                 ws.send(args.join(' '));
+
+                return $deferred.promise();
             },
             /**
              * @param {String} name        - source name
@@ -321,12 +326,10 @@ define([
              * @param {String}   baseName   - source name
              * @param {String}   outName    - output name
              * @param {Json}     params     - the parameters that apply for
-             * @param {Function} onFinished - finished callback
              *
+             * @return {Promise}
              */
-            applyTransform: function(baseName, outName, params, onFinished) {
-                onFinished = onFinished || function() {};
-
+            applyTransform: function(baseName, outName, params) {
                 var args = [
                     'apply_transform',
                     baseName,
@@ -338,14 +341,15 @@ define([
                     params.rZ || 0,
                     outName
                 ],
+                $deferred = $.Deferred(),
                 doTransform = function() {
-                    events.onMessage = function(data) {
+                    events.onMessage = function(response) {
 
-                        if ('ok' === data.status) {
-                            onFinished(data);
+                        if ('ok' === response.status) {
+                            $deferred.resolve(response);
                         }
                         else {
-                            // TODO: unexception result?
+                            $deferred.reject(response);
                         }
 
                     };
@@ -354,6 +358,8 @@ define([
                 };
 
                 doTransform();
+
+                return $deferred.promise();
             },
             /**
              * import pcd file
@@ -372,21 +378,15 @@ define([
                         name,
                         fileType,
                         fileLength
-                    ],
-                    opts = {
-                        onFinished: function(pointCloud) {
-                            $deferred.resolve(pointCloud);
-                        }
-                    };
+                    ];
 
                 events.onMessage = function(data) {
 
                     switch (data.status) {
                     case 'ok':
-                        self.dump(
-                            name,
-                            opts
-                        );
+                        self.dump(name).done((pointCloud) => {
+                            $deferred.resolve(pointCloud);
+                        });
                         break;
                     case 'continue':
                         splitBinary(file, function(result) {
@@ -471,6 +471,44 @@ define([
                         }
                     }
 
+                };
+
+                ws.send(args.join(' '));
+
+                return $deferred.promise();
+            },
+            /**
+             * take sub set from specific point cloud
+             *
+             * @param {String} baseName - base name
+             * @param {String} outName  - out name
+             * @param {String} side     - side (left, right, both)
+             *
+             * @return {Promise}
+             */
+            subset: function(baseName, outName, side) {
+                var sideMap = ['left', 'right', 'both'],    // `both` means - duplicate a new point cloud
+                    $deferred = $.Deferred(),
+                    args = [
+                        'subset',
+                        baseName,
+                        outName,
+                        side
+                    ];
+
+                if (-1 === sideMap.indexOf(side)) {
+                    // reject directly
+                    return $deferred.reject({ status: 'error', reason: 'Wrong Side' }).promise();
+                }
+
+                events.onMessage = function(data) {
+                    switch (data.status) {
+                    case 'ok':
+                        $deferred.resolve(data);
+                        break;
+                    default:
+                        $deferred.reject(data);
+                    }
                 };
 
                 ws.send(args.join(' '));
