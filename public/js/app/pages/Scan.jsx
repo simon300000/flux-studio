@@ -504,6 +504,15 @@ define([
                     });
                 },
 
+                _updateMesh: function(mesh) {
+                    var meshes = this.state.meshes;
+                    meshes[mesh.arrayIndex] = mesh;
+
+                    this.setState({
+                        meshes: meshes
+                    });
+                },
+
                 _newMesh: function(args) {
                     args = args || {};
 
@@ -513,6 +522,8 @@ define([
                         transformMethods: {
                             hide: function() {}
                         },
+                        leftSize: args.leftSize || 0,
+                        rightSize: args.rightSize || 0,
                         name: args.name,
                         left: args.name + '-left',
                         right: args.name + '-right',
@@ -535,20 +546,23 @@ define([
                         mesh = mesh || self._getMesh(self.state.scanTimes),
                         fileReader = new FileReader(),
                         model,
+                        leftSize = pointCloud.left.size / 4,
+                        rightSize = pointCloud.right.size / 4,
                         transformMethods;
 
                     self._convertFromBlob(pointCloud.total).done((data) => {
-
                         if ('undefined' === typeof mesh) {
                             model = scanedModel.appendModel(
                                 data,
-                                pointCloud.left.size / 4,
-                                pointCloud.right.size / 4
+                                leftSize,
+                                rightSize
                             );
                             var newMesh = self._newMesh({
                                 name: 'scan-' + (new Date()).getTime(),
                                 model: model,
-                                index: self.state.scanTimes
+                                index: self.state.scanTimes,
+                                leftSize: leftSize,
+                                rightSize: rightSize
                             });
                             newMesh.arrayIndex = meshes.length;
                             meshes.push(newMesh);
@@ -562,12 +576,15 @@ define([
                             });
                         }
                         else {
+                            mesh.leftSize = leftSize;
+                            mesh.rightSize = rightSize;
                             mesh.model = scanedModel.updateMesh(
                                 mesh.model,
                                 data,
-                                pointCloud.left.size / 4,
-                                pointCloud.right.size / 4
+                                leftSize,
+                                rightSize
                             );
+                            self._updateMesh(mesh);
                         }
                     });
 
@@ -944,7 +961,6 @@ define([
                     var self = this,
                         delete_noise_name = 'clear-noise-' + (new Date()).getTime(),
                         onDumpFinished = function(data) {
-                            console.log('data');
                             meshUpdateStream.onNext(mesh);
                         },
                         onDumpReceiving = function(data, len) {
@@ -963,7 +979,6 @@ define([
                     self._openBlocker(true, ProgressConstants.NONSTOP);
 
                     $deferred.then((response) => {
-                        console.log(response);
                         mesh.oldName = mesh.name;
                         mesh.name = delete_noise_name;
 
@@ -979,7 +994,6 @@ define([
                         }
                     }).
                     then((response) => {
-                        console.log(mesh.name);
                         return modelingMethods.dump(mesh.name, onDumpReceiving);
                     }).
                     always((response) => {
@@ -1722,29 +1736,33 @@ define([
 
                                 scanedModel.render();
                             });
-                        };
+                        },
+                        sidePicker;
 
                     thumbnails = meshes.map(function(mesh, i) {
-
                         itemClass = {
                             'mesh-thumbnail-item': true,
                             'choose': mesh.choose,
                             'hide': !mesh.display || true === self.state.isScanStarted || true === self.state.showCamera
                         };
+                        sidePicker = (
+                            0 < mesh.leftSize && 0 < mesh.rightSize ?
+                            <div className="mesh-thumbnail-control">
+                                <label>
+                                    <input type="checkbox" ref={'mesh-' + mesh.index + '-left'} data-index={mesh.index} onClick={onChangeSide} value="left" defaultChecked="true"/>Left
+                                </label>
+                                <label>
+                                    <input type="checkbox" ref={'mesh-' + mesh.index + '-right'} data-index={mesh.index} onClick={onChangeSide} value="right" defaultChecked="true"/>Right
+                                </label>
+                            </div> : ''
+                        );
 
                         return {
                             label: (
                                 <div className={cx(itemClass)}>
                                     <div className="mesh-thumbnail-no" data-index={mesh.index} onClick={onChooseMesh}>{mesh.index}</div>
                                     <div className="mesh-thumbnail-close fa fa-times" onClick={self._onDeletingMesh.bind(self, mesh, i)}></div>
-                                    <div className="mesh-thumbnail-control">
-                                        <label>
-                                            <input type="checkbox" ref={'mesh-' + mesh.index + '-left'} data-index={mesh.index} onClick={onChangeSide} value="left" defaultChecked="true"/>Left
-                                        </label>
-                                        <label>
-                                            <input type="checkbox" ref={'mesh-' + mesh.index + '-right'} data-index={mesh.index} onClick={onChangeSide} value="right" defaultChecked="true"/>Right
-                                        </label>
-                                    </div>
+                                    {sidePicker}
                                 </div>
                             )
                         }
