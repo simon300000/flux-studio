@@ -117,6 +117,44 @@ define([
             );
         },
 
+        _renderCropButton: function(lang) {
+            var cx = React.addons.classSet,
+                cropClass = {
+                    'btn': true,
+                    'btn-action': true,
+                    'btn-crop': true,
+                    'btn-pressed': this.state.onCropping
+                };
+
+            return ('both' === this.state.handleMesh.side ?
+                <div className="control">
+                    <button className={cx(cropClass)} data-ga-event="crop" onClick={this._onCrop}>
+                        <img src="/img/icon-crop.png"/>
+                        {lang.scan.manipulation.crop}
+                    </button>
+                </div> :
+                '');
+        },
+
+        _renderDenoiseButton: function(lang) {
+            var cx = React.addons.classSet,
+                cropClass = {
+                    'btn': true,
+                    'btn-action': true,
+                    'btn-crop': true,
+                    'btn-pressed': this.state.onCropping
+                };
+
+            return ('both' === this.state.handleMesh.side ?
+            <div className="control">
+                <button className="btn btn-action btn-denoise" data-ga-event="denoise" onClick={this._onClearNoise}>
+                    <img src="/img/icon-denoise.png"/>
+                    {lang.scan.manipulation.clear_noise}
+                </button>
+            </div> :
+            '');
+        },
+
         _renderForSingleMesh: function(lang) {
             var props = this.props,
                 state = this.state,
@@ -141,7 +179,9 @@ define([
                     'btn-action': true,
                     'btn-crop': true,
                     'btn-pressed': this.state.onCropping
-                };
+                },
+                buttonCrop = this._renderCropButton(lang),
+                buttonDenoise = this._renderDenoiseButton(lang);
 
             return (
                 <div className="wrapper">
@@ -151,18 +191,8 @@ define([
                             {lang.scan.manipulation.filter}
                         </p>
                         <div className="accordion-body">
-                            <div className="control">
-                                <button className={cx(cropClass)} data-ga-event="crop" onClick={this._onCrop}>
-                                    <img src="/img/icon-crop.png"/>
-                                    {lang.scan.manipulation.crop}
-                                </button>
-                            </div>
-                            <div className="control">
-                                <button className="btn btn-action btn-denoise" data-ga-event="denoise" onClick={this._onClearNoise}>
-                                    <img src="/img/icon-denoise.png"/>
-                                    {lang.scan.manipulation.clear_noise}
-                                </button>
-                            </div>
+                            {buttonCrop}
+                            {buttonDenoise}
                             <div className="control">
                                 <button className="btn btn-action btn-save-pcd" data-ga-event="save-point-cloud" onClick={this._onSavePCD}>
                                     <img src="/img/icon-export.png"/>
