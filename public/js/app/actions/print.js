@@ -71,6 +71,8 @@ define([
     var movingOffsetX, movingOffsetY, panningOffset, originalCameraPosition, originalCameraRotation,
         scaleBeforeTransformX, scaleBeforeTransformY, scaleBeforeTransformZ;
 
+    var latestAdvanceParameters = "";
+
     var _id = 'PRINT.JS',
         responseBlob, printPath,
         previewScene,
@@ -1359,6 +1361,7 @@ define([
     function setAdvanceParameter(settings) {
         var d = $.Deferred();
         slicingStatus.pauseReport = true;
+        latestAdvanceParameters = settings.custom;
 
         var t = setInterval(function() {
             if(slicingStatus.canInterrupt) {
@@ -2331,6 +2334,7 @@ define([
     function doFCodeImport(type) {
         clearScene();
         fcodeConsole = fcodeReader();
+        fcodeConsole.setParameter('advancedSettings', latestAdvanceParameters);
         importFromGCode = type === 'gcode';
         importFromFCode = type === 'fc';
 

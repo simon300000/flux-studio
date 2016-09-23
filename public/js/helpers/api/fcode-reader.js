@@ -146,6 +146,33 @@ define([
 
                 ws.send(`change_img ${data.size}`);
                 return d.promise();
+            },
+
+            setParameter: (name, value) => {
+
+                let d = $.Deferred(),
+                    errors = [];
+
+                events.onMessage = (result) => {
+                    d.resolve(result, errors);
+                };
+
+                events.onError = (error) => {
+                    d.reject(error);
+                };
+
+                events.onFatal = (error) => {
+                    d.reject(error);
+                };
+
+                if(name === 'advancedSettings' && value !== '') {
+                    ws.send(`advanced_setting ${value}`);
+                }
+                else {
+                    ws.send(`advanced_setting ${name} = ${value}`);
+                }
+
+                return d.promise();
             }
         };
     };
