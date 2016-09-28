@@ -1,3 +1,17 @@
+/*
+
+IMPORTANT!
+IMPORTANT!
+IMPORTANT!
+
+This library has been re-written to fix bugs.
+
+The origin library has 2 bugs fixed in this script:
+1. Does not handle error when loading corrupted stl
+2. Does not support stl with utf-8 name 
+
+*/
+
 /**
  * @author aleeper / http://adamleeper.com/
  * @author mrdoob / http://mrdoob.com/

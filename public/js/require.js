@@ -1,3 +1,15 @@
+/*
+
+IMPORTANT!
+IMPORTANT!
+IMPORTANT!
+
+This library has been re-written to adapt FLUX Studio library.
+
+1. rewrite jsx! route to jsx/ to support realtime jsx precompiling
+
+*/
+
 /** vim: et:ts=4:sw=4:sts=4
  * @license RequireJS 2.3.2 Copyright jQuery Foundation and other contributors.
  * Released under MIT license, https://github.com/requirejs/requirejs/blob/master/LICENSE
