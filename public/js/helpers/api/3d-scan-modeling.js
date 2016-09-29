@@ -63,7 +63,7 @@ define([
                     args = [
                         order_name,
                         name,
-                        point_cloud.left.size / 24,
+                        point_cloud.left.size / 24 || 0,
                         point_cloud.right.size / 24 || 0
                     ];
 

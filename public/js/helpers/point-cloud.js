@@ -28,6 +28,8 @@ define(function() {
                     chunk.right.push(data.slice(0, left_len));
                     chunk.left.push(data.slice(left_len, left_len + right_len));
 
+                    console.log('chunk push', left_len, right_len);
+
                     fileReader.onload = function() {
                         typedArray = new Float32Array(this.result);
                         opts.onProgress(typedArray, blobs_len);
@@ -42,10 +44,11 @@ define(function() {
 
                 return this;
             },
-            get: function() {
+            get: function(side) {
                 return {
                     left: new Blob(chunk.left),
                     right: new Blob(chunk.right),
+                    chunk: { left: chunk.left, right: chunk.right },
                     total: new Blob(chunk.left.concat(chunk.right))
                 };
             }

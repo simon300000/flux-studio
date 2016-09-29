@@ -559,6 +559,7 @@ define([
                     });
 
                     if ('undefined' === typeof mesh) {
+                        // Create new mesh while scanning
                         model = scanedModel.appendModel(views);
                         var newMesh = self._newMesh({
                             name: 'scan-' + (new Date()).getTime(),
@@ -576,8 +577,10 @@ define([
                             meshAddRemoveStream.onNext([{mesh: newMesh, type: 'add'}]);
                         });
                     }
-                    else {
+                    else if(progressPercentage > self.state.meshLocked){
                         mesh.model = scanedModel.updateMesh(mesh.model, views);
+                    }else{
+                        self.setState({meshLocked: 0});
                     }
                 },
 
@@ -753,9 +756,10 @@ define([
                     this._mergeAll(exportFile, false);
                 },
 
-                _onScanFinished: function(point_cloud) {
+                _onScanFinished: function(pcd) { //pcd = pointCloud
                     var self = this,
                         mesh = self._getMesh(self.state.scanTimes),
+                        meshes = self.state.meshes,
                         onUploadFinished = function() {
                             // update scan times
                             self.setState({
@@ -771,16 +775,94 @@ define([
                             });
                         };
 
-                    self.state.scanModelingWebSocket.upload(
-                        mesh.name,
-                        point_cloud,
-                        {
-                            onStarting: function() {
-                                self._openBlocker(true, ProgressConstants.NONSTOP);
-                            },
-                            onFinished: onUploadFinished
-                        }
-                    );
+                    // 20160928 Refactored for left & right sperate
+                    var pcdLeft = { left: pcd.left, right: (new Float32Array()), total: pcd.left };
+                    var pcdRight = { left: (new Float32Array()), right: pcd.right, total: pcd.right };
+
+                    console.log(pcdLeft, pcdRight);
+
+                    var leftModel, rightModel, leftMesh, rightMesh;
+                    var fileReader = new FileReader();
+
+                    self.setState({meshLocked: 100});
+
+                    var uploadLeftAndRight = function(){
+                        self.state.scanModelingWebSocket.upload(
+                            leftMesh.name,
+                            pcdLeft,
+                            {
+                                onStarting: function() {
+                                    self._openBlocker(true, ProgressConstants.NONSTOP);
+                                },
+                                onFinished: function(result){
+                                    self.state.scanModelingWebSocket.upload(
+                                        rightMesh.name,
+                                        pcdRight,
+                                        {
+                                            onStarting: function() {
+                                                self._openBlocker(true, ProgressConstants.NONSTOP);
+                                            },
+                                            onFinished: function(result){
+                                                onUploadFinished(result);
+                                                self.setState({meshLocked: 100});
+                                            }
+                                        }
+                                    );
+                                    onUploadFinished(result);
+                                }
+                            }
+                        )
+                    };
+                    
+                    var onloadRight = function(){
+                        rightModel = scanedModel.appendModel(new Float32Array(this.result));
+
+                        rightMesh = self._newMesh({
+                            name: 'scan-' + (new Date()).getTime() + '-right',
+                            model: rightModel,
+                            index: (++self.state.scanTimes)
+                        });
+                        rightMesh.arrayIndex = meshes.length;
+                        meshes.push(rightMesh);
+
+                        self.setState({
+                            meshes: meshes,
+                            scanTimes: (self.state.scanTimes)
+                        });
+
+                        uploadLeftAndRight();
+                    }
+
+                    var onloadLeft = function(){
+                        // leftModel = scanedModel.appendModel(new Float32Array(this.result));
+
+                        leftMesh = mesh;
+                        scanedModel.updateMesh(leftMesh.model, new Float32Array(this.result));
+                        // self._newMesh({
+                        //     name: 'scan-' + (new Date()).getTime() + '-left',
+                        //     model: leftModel,
+                        //     index: (++self.state.scanTimes)
+                        // });
+
+                        // leftMesh.arrayIndex = meshes.length;
+                        // meshes.push(leftMesh);
+                        
+                        // self.setState({
+                        //     meshes: meshes,
+                        //     scanTimes: (self.state.scanTimes)
+                        // }); 
+
+                        fileReader.onload = onloadRight;
+                        fileReader.readAsArrayBuffer(pcd.right);
+                    }
+
+                    fileReader.onload = onloadLeft;
+                    fileReader.readAsArrayBuffer(pcd.left);
+
+                    self.setState({
+                        meshes: meshes,
+                        scanTimes: (self.state.scanTimes)
+                    });
                 },
 
                 _handleCheck: function() {
@@ -1612,7 +1694,7 @@ define([
                         return {
                             label: (
                                 <div className={cx(itemClass)}>
-                                    <div className="mesh-thumbnail-no" data-index={mesh.index} onClick={onChooseMesh}>{mesh.index}</div>
+                                    <div className="mesh-thumbnail-no" data-index={mesh.index} onClick={onChooseMesh}>{mesh.name}</div>
                                     <div className="mesh-thumbnail-close fa fa-times" onClick={self._onDeletingMesh.bind(self, mesh, i)}></div>
                                 </div>
                             )
