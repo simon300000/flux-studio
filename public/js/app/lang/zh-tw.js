@@ -261,6 +261,20 @@ define(function() {
             language: '語言',
             notifications: '通知',
             close: '關閉',
+            cancel: '取消',
+            done: '完成',
+            connect_printer: {
+                title: '選擇連接成型機'
+            },
+            notification_on: '開啟',
+            notification_off: '關閉',
+            engine_change_fail: {
+                'caption': 'unable to change engine ',
+                '1': 'error during checking',
+                '2': 'cura version error',
+                '3': 'path is not cura',
+                '4': 'path is not a exist file, please check engine path in setting section'
+            },
             printer: {
                 new_printer: '新增成型機',
                 name: '成型機名稱',
@@ -284,20 +298,6 @@ define(function() {
                 change_password: '變更密碼',
                 connected_printer: '已連接成型機',
                 connect: '連接'
-            },
-            cancel: '取消',
-            done: '完成',
-            connect_printer: {
-                title: '選擇連接成型機'
-            },
-            notification_on: '開啟',
-            notification_off: '關閉',
-            engine_change_fail: {
-                'caption': 'unable to change engine ',
-                '1': 'error during checking',
-                '2': 'cura version error',
-                '3': 'path is not cura',
-                '4': 'path is not a exist file, please check engine path in setting section'
             },
             allow_tracking: '您是否願意自動傳送匿名用量資料，協助 FLUX 改進產品和服務？'
         },

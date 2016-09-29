@@ -275,11 +275,36 @@ define(function() {
                 '3': 'path is not cura',
                 '4': 'path is not a exist file, please check engine path in setting section'
             },
+            printer: {
+                new_printer: '新增成型機',
+                name: '成型機名稱',
+                current_password: '目前密碼',
+                set_password: '設定密碼',
+                security_notice: '你可以用密碼保護你的成型機',
+                connected_wi_fi: 'Wi-Fi 連線',
+                advanced: '進階',
+                join_other_network: '加入其它網路',
+                your_password: '新密碼',
+                confirm_password: '確認密碼',
+                save_password: '儲存變更'
+            },
+            flux_cloud: {
+                caption: 'Get FLUX 3D Printer be remote!',
+                line1: 'Control your FLUX 3D Printer with FLUX Cloud in anywhere you are',
+                start_to_use: 'Start to Use',
+                i_have_an_account: 'I have an account',
+                email: '電子信箱',
+                password: '密碼',
+                change_password: '變更密碼',
+                connected_printer: '已連接成型機',
+                connect: '連接'
+            },
             allow_tracking: 'Would you like to send anonymous usage statistics to FLUX to improve the app?'
         },
         print: {
             import: 'IMPORT',
             save: 'Save',
+            support_view: 'Support Preview',
             start_print: 'Print',
             advanced: {
                 general: 'General',
@@ -962,7 +987,7 @@ define(function() {
             },
             image_is_too_small: 'The file contains unsupported information',
             monitor_too_old: {
-                caption: 'Firmware Outdated',
+                caption: 'Delta Firmware Outdated',
                 content: 'Please install the latest firmware with <a target="_blank" href="http://helpcenter.flux3dp.com/hc/en-us/articles/216251077">this guide</a>.'
             },
             cant_establish_connection: 'Unable to connect FLUX Studio API. Please <a target="_blank" href="https://flux3dp.zendesk.com/hc/en-us/requests/new" target="_blank">contact FLUX support.</a>',
