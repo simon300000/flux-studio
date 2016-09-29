@@ -351,10 +351,9 @@ define([
 
         material = new THREE.PointCloudMaterial({
             size: 0.5,
-            opacity: 0.5,
+            opacity: 0.6,
             transparent: true,
-            color: new THREE.Color( Math.floor(0xffffff * Math.random()) ),
-            vertexColors: THREE.NoColors
+            vertexColors: THREE.VertexColors
         });
 
         console.log("New Model", model_data.length);

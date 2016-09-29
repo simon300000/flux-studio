@@ -1029,7 +1029,9 @@ define([
                             onStarting: function() {
                                 self._openBlocker(true, ProgressConstants.NONSTOP);
                             },
-                            onReceiving: self._onRendering,
+                            onReceiving: function(data, len) {
+                                self._onRendering(data, len, mesh);
+                            },
                             onFinished: function(data) {
                                 mesh.transformMethods.show();
                                 self._openBlocker(false);
@@ -1044,7 +1046,7 @@ define([
                             { mode: 'r', direction: 'False', value: Math.min(cylider_box.max.y, cylider_box.max.x) }
                         ];
 
-                    if (window.confirm('Do crop?')) {
+                    if (window.confirm('Do crop to ' + mesh.name+ '?')) {
 
                         self.state.scanModelingWebSocket.cut(
                             mesh.name,
@@ -1694,7 +1696,7 @@ define([
                         return {
                             label: (
                                 <div className={cx(itemClass)}>
-                                    <div className="mesh-thumbnail-no" data-index={mesh.index} onClick={onChooseMesh}>{mesh.name}</div>
+                                    <div className="mesh-thumbnail-no" data-index={mesh.index} onClick={onChooseMesh}>{mesh.index}</div>
                                     <div className="mesh-thumbnail-close fa fa-times" onClick={self._onDeletingMesh.bind(self, mesh, i)}></div>
                                 </div>
                             )

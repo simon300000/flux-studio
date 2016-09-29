@@ -669,13 +669,14 @@ define(function() {
             confirm: 'Confirm',
             caution: 'Caution',
             cancel: 'Cancel',
-            delete_mesh: 'Delete?',
+            crop_confirm: 'Are you sure to crop this point cloud?',
+            delete_mesh: 'Do you want to delete this point cloud?',
             quality: 'QUALITY',
             scan_again_confirm: 'Do you want to discard current scan result?',
             calibrate: 'Calibrate',
             calibration_done: {
                 caption: 'Calibration Done',
-                message: 'You are able to scan now'
+                message: 'You can scan now'
             },
             cant_undo: 'Unable to undo',
             estimating: 'Estimating the time...',
