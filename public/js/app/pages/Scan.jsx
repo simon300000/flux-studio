@@ -34,9 +34,9 @@ define([
     React,
     List,
     Modal,
-    scanedModel,
-    scanControl,
-    scanModeling,
+    ScannedModel,
+    ScanControl,
+    ScanModeling,
     SetupPanel,
     ManipulationPanel,
     PrinterSelector,
@@ -50,9 +50,9 @@ define([
     ProgressStore,
     ProgressConstants,
     shortcuts,
-    round,
-    dndHandler,
-    menuFactory,
+    Round,
+    DndHandler,
+    MenuFactory,
     PointCloudHelper,
     Rx,
     FormatDuration
@@ -164,19 +164,19 @@ define([
                     AlertStore.onRetry(self._retry);
                     AlertStore.onYes(self._onYes);
                     AlertStore.onCancel(self._onCancel);
-                    dndHandler.plug(document, self._importPCD);
+                    DndHandler.plug(document, self._importPCD);
 
                     self.setState({
-                        stage: scanedModel.init()
+                        stage: ScannedModel.init()
                     });
 
-                    menuFactory.items.undo.enabled = true;
-                    menuFactory.items.undo.onClick = fireUndo;
-                    menuFactory.items.import.enabled = false === self.state.isScanStarted;
-                    menuFactory.items.import.onClick = function() {
+                    MenuFactory.items.undo.enabled = true;
+                    MenuFactory.items.undo.onClick = fireUndo;
+                    MenuFactory.items.import.enabled = false === self.state.isScanStarted;
+                    MenuFactory.items.import.onClick = function() {
                         self.refs.fileUploader.getDOMNode().click();
                     };
-                    menuFactory.methods.refresh();
+                    MenuFactory.methods.refresh();
                 },
 
                 componentWillUnmount: function() {
@@ -192,7 +192,7 @@ define([
                     AlertStore.removeRetryListener(self._retry);
                     AlertStore.removeYesListener(self._onYes);
                     AlertStore.removeCancelListener(self._onCancel);
-                    dndHandler.unplug(document);
+                    DndHandler.unplug(document);
 
                     if ('undefined' !== typeof self.state.scanModelingWebSocket) {
                         self.state.scanModelingWebSocket.connection.close(false);
@@ -200,7 +200,7 @@ define([
 
                     stopGettingImage();
 
-                    scanedModel.destroy();
+                    ScannedModel.destroy();
                     subscriber.dispose();
                     meshAddRemoveSubscriber.dispose();
                 },
@@ -248,7 +248,7 @@ define([
                                     typedArray = new Float32Array(this.result);
 
                                     // update point cloud
-                                    mesh.model = scanedModel.updateMesh(mesh.model, typedArray);
+                                    mesh.model = ScannedModel.updateMesh(mesh.model, typedArray);
 
                                     newMesh = self._newMesh({
                                         model: mesh.model,
@@ -256,7 +256,7 @@ define([
                                         index: mesh.index
                                     });
 
-                                    scanedModel.add(mesh.model);
+                                    ScannedModel.add(mesh.model);
                                     newMesh.isUndo = true;
                                     meshes.splice(mesh.arrayIndex, 0, newMesh);
                                     self.state.scanCtrlWebSocket.stopGettingImage();
@@ -275,7 +275,7 @@ define([
                                 mesh.model.material.opacity = 0.3;
                                 mesh.choose = false;
                                 mesh.isUndo = true;
-                                scanedModel.add(mesh.model);
+                                ScannedModel.add(mesh.model);
                                 self.state.meshes.splice(mesh.arrayIndex, 0, mesh);
                                 self.state.scanCtrlWebSocket.stopGettingImage();
                                 self.setState({
@@ -316,7 +316,7 @@ define([
                         break;
                     case 'scan-again':
                         self.setState(self.getInitialState());
-                        scanedModel.clear();
+                        ScannedModel.clear();
                         self.state.scanCtrlWebSocket.stopGettingImage().done(function() {
                            self.state.scanCtrlWebSocket.connection.close(false);
                         });
@@ -425,7 +425,7 @@ define([
 
                                 fileReader.onload = function() {
                                     typedArray = new Float32Array(this.result);
-                                    model = scanedModel.appendModel(typedArray);
+                                    model = ScannedModel.appendModel(typedArray);
 
                                     meshes.push(self._newMesh({
                                         name: fileName,
@@ -548,7 +548,7 @@ define([
                     progressRemainingTime = FormatDuration(left_step);
 
                     progressPercentage = Math.min(
-                        round(currentSteps / scan_speed * 100, -2),
+                        Round(currentSteps / scan_speed * 100, -2),
                         100
                     );
 
@@ -560,7 +560,7 @@ define([
 
                     if ('undefined' === typeof mesh) {
                         // Create new mesh while scanning
-                        model = scanedModel.appendModel(views);
+                        model = ScannedModel.appendModel(views);
                         var newMesh = self._newMesh({
                             name: 'scan-' + (new Date()).getTime(),
                             model: model,
@@ -578,7 +578,7 @@ define([
                         });
                     }
                     else if(progressPercentage > self.state.meshLocked){
-                        mesh.model = scanedModel.updateMesh(mesh.model, views);
+                        mesh.model = ScannedModel.updateMesh(mesh.model, views);
                     }else{
                         self.setState({meshLocked: 0});
                     }
@@ -594,7 +594,7 @@ define([
                         mesh.model.material.opacity = 0.3;
                     });
 
-                    scanedModel.remove(self.state.stlMesh);
+                    ScannedModel.remove(self.state.stlMesh);
 
                     self.setState({
                         meshes: meshes,
@@ -643,7 +643,7 @@ define([
                                                 stlBlob: response.data
                                             });
 
-                                            scanedModel.loadStl(response.data, onClose);
+                                            ScannedModel.loadStl(response.data, onClose);
                                             break;
                                         case 'computing':
                                             endExportSTL(collectName);
@@ -779,8 +779,6 @@ define([
                     var pcdLeft = { left: pcd.left, right: (new Float32Array()), total: pcd.left };
                     var pcdRight = { left: (new Float32Array()), right: pcd.right, total: pcd.right };
 
-                    console.log(pcdLeft, pcdRight);
-
                     var leftModel, rightModel, leftMesh, rightMesh;
                     var fileReader = new FileReader();
 
@@ -815,7 +813,7 @@ define([
                     };
                     
                     var onloadRight = function(){
-                        rightModel = scanedModel.appendModel(new Float32Array(this.result));
+                        rightModel = ScannedModel.appendModel(new Float32Array(this.result));
 
                         rightMesh = self._newMesh({
                             name: 'scan-' + (new Date()).getTime() + '-right',
@@ -834,23 +832,9 @@ define([
                     }
 
                     var onloadLeft = function(){
-                        // leftModel = scanedModel.appendModel(new Float32Array(this.result));
 
                         leftMesh = mesh;
-                        scanedModel.updateMesh(leftMesh.model, new Float32Array(this.result));
-                        // self._newMesh({
-                        //     name: 'scan-' + (new Date()).getTime() + '-left',
-                        //     model: leftModel,
-                        //     index: (++self.state.scanTimes)
-                        // });
-
-                        // leftMesh.arrayIndex = meshes.length;
-                        // meshes.push(leftMesh);
-                        
-                        // self.setState({
-                        //     meshes: meshes,
-                        //     scanTimes: (self.state.scanTimes)
-                        // }); 
+                        ScannedModel.updateMesh(leftMesh.model, new Float32Array(this.result));
 
                         fileReader.onload = onloadRight;
                         fileReader.readAsArrayBuffer(pcd.right);
@@ -920,7 +904,7 @@ define([
                                 self._onScanFinished(response.pointCloud);
                             }).fail(function(response) {
                                 self.setState({
-                                    scanCtrlWebSocket: scanControl(self.state.selectedPrinter.uuid, opts)
+                                    scanCtrlWebSocket: ScanControl(self.state.selectedPrinter.uuid, opts)
                                 });
 
                             });
@@ -952,7 +936,7 @@ define([
                         onYes = function(id) {
                             self.state.scanCtrlWebSocket.stopGettingImage();
                             self.setState(self.getInitialState());
-                            scanedModel.clear();
+                            ScannedModel.clear();
                             AlertStore.removeYesListener(onYes);
                         };
 
@@ -978,7 +962,7 @@ define([
                     // on scanning or had point cloud
                     if (true === self.state.isScanStarted && 0 === self.state.meshes.length) {
                         self.setState(self.getInitialState());
-                        scanedModel.clear();
+                        ScannedModel.clear();
 
                         if ('undefined' !== typeof self.state.scanCtrlWebSocket) {
                             self.state.scanCtrlWebSocket.connection.close(false);
@@ -989,35 +973,32 @@ define([
                 _doClearNoise: function(mesh) {
                     var self = this,
                         delete_noise_name = 'clear-noise-' + (new Date()).getTime(),
-                        onStarting = function(data) {
-                            self._openBlocker(true, ProgressConstants.NONSTOP);
-                        },
-                        onDumpFinished = function(data) {
-                            mesh.oldName = mesh.name;
-                            mesh.name = delete_noise_name;
-                            meshUpdateStream.onNext(mesh);
-                            self._openBlocker(false);
-                        },
-                        onDumpReceiving = function(data, len) {
-                            self._onRendering(data, len, mesh);
-                        };
-
+                        opts = {
+                            onStarting: function(data) {
+                                self._openBlocker(true, ProgressConstants.NONSTOP);
+                            },
+                            onFinished: function(data) {
+                                mesh.oldName = mesh.name;
+                                mesh.name = delete_noise_name;
+                                meshUpdateStream.onNext(mesh);
+                                self._openBlocker(false);
+                            },
+                            onReceiving: function(data, len) {
+                                self._onRendering(data, len, mesh);
+                            }
+                        };   
                     self.state.scanModelingWebSocket.deleteNoise(
                         mesh.name,
                         delete_noise_name,
                         0.3,
-                        {
-                            onStarting: onStarting,
-                            onFinished: onDumpFinished,
-                            onReceiving: onDumpReceiving
-                        }
+                        opts
                     );
                 },
 
                 _doCropOn: function(mesh) {
                     mesh.transformMethods.hide();
                     this.setState({
-                        cylinder: scanedModel.cylinder.create(mesh.model)
+                        cylinder: ScannedModel.cylinder.create(mesh.model)
                     });
                 },
 
@@ -1063,7 +1044,7 @@ define([
                 },
 
                 _removeCylinder: function(mesh) {
-                    scanedModel.cylinder.remove(mesh.model);
+                    ScannedModel.cylinder.remove(mesh.model);
                     this.setState({
                         cylinder: undefined
                     });
@@ -1082,7 +1063,7 @@ define([
                         doingApplyTransform = function() {
                             currentMesh = selectedMeshes[currentIndex];
 
-                            matrixValue = scanedModel.matrix(currentMesh.model);
+                            matrixValue = ScannedModel.matrix(currentMesh.model);
                             params = {
                                 pX: matrixValue.position.center.x,
                                 pY: matrixValue.position.center.y,
@@ -1127,16 +1108,7 @@ define([
                         outputName = '';
 
                     self._doApplyTransform(function(response) {
-                        var onMergeFinished = function(data) {
-                                if (false === isEnd()) {
-                                    currentIndex++;
-                                    doingMerge();
-                                }
-                                else {
-                                    afterMerge(outputName);
-                                }
-                            },
-                            afterMerge = callback || function(outputName) {
+                        var afterMerge = callback || function(outputName) {
                                 var mesh,
                                     updatedMeshes = [],
                                     deferred = $.Deferred(),
@@ -1159,7 +1131,7 @@ define([
                                         },
                                         onFinished: function(response) {
                                             self.state.selectedMeshes.forEach(function(selectedMesh, i) {
-                                                scanedModel.remove(selectedMesh.model);
+                                                ScannedModel.remove(selectedMesh.model);
                                             });
 
                                             for (var i = self.state.meshes.length - 1; i >= 0; i--) {
@@ -1179,8 +1151,20 @@ define([
                                     }
                                 );
                             },
-                            onMergeStarting = function() {
-                                self._openBlocker(true, ProgressConstants.NONSTOP);
+                            opts = {
+                                onStarting: function(){
+                                    self._openBlocker(true, ProgressConstants.NONSTOP)
+                                },
+                                onReceiving: self._onRendering,
+                                onFinished: function(data) {
+                                    if (false === isEnd()) {
+                                        currentIndex++;
+                                        doingMerge();
+                                    }
+                                    else {
+                                        afterMerge(outputName);
+                                    }
+                                }
                             },
                             isEnd = function() {
                                 return (endIndex === currentIndex);
@@ -1204,11 +1188,7 @@ define([
                                         baseName,
                                         targetMesh.name,
                                         outputName,
-                                        {
-                                            onStarting: onMergeStarting,
-                                            onReceiving: self._onRendering,
-                                            onFinished: onMergeFinished
-                                        }
+                                        opts
                                     );
                                 }
                                 else {
@@ -1408,7 +1388,7 @@ define([
                     var self = this,
                         meshes = self.state.meshes;
 
-                    scanedModel.remove(mesh.model);
+                    ScannedModel.remove(mesh.model);
                     meshes.splice(index, 1);
 
                     self.setState({
@@ -1447,7 +1427,7 @@ define([
                         };
 
                     self.setState({
-                        scanCtrlWebSocket: scanControl(printer.uuid, ctrlOpts)
+                        scanCtrlWebSocket: ScanControl(printer.uuid, ctrlOpts)
                     });
                 },
 
@@ -1471,7 +1451,7 @@ define([
                             mesh.model.position.set(matrix.position.x , matrix.position.y , matrix.position.z);
                             mesh.model.rotation.set(matrix.rotation.x , matrix.rotation.y , matrix.rotation.z);
 
-                            scanedModel.render();
+                            ScannedModel.render();
                         };
 
                     return (
@@ -1593,11 +1573,11 @@ define([
                             self.setState({
                                 gettingStarted: true,
                                 selectedPrinter: auth_printer,
-                                scanModelingWebSocket: scanModeling(ModelingOpts)
+                                scanModelingWebSocket: ScanModeling(ModelingOpts)
                             });
 
-                            menuFactory.items.import.enabled = true;
-                            menuFactory.methods.refresh();
+                            MenuFactory.items.import.enabled = true;
+                            MenuFactory.methods.refresh();
                             self._openBlocker(true, ProgressConstants.NONSTOP);
                         },
                         noDeviceAvailable = function() {
@@ -1636,8 +1616,8 @@ define([
 
                                 var me = e.currentTarget,
                                     mesh = self._getMesh(parseInt(me.dataset.index, 10)),
-                                    position = scanedModel.toScreenPosition(mesh.model),
-                                    transformMethods = scanedModel.attachControl(mesh.model, self._refreshObjectDialogPosition),
+                                    position = ScannedModel.toScreenPosition(mesh.model),
+                                    transformMethods = ScannedModel.attachControl(mesh.model, self._refreshObjectDialogPosition),
                                     selectedMeshes;
 
                                 mesh.transformMethods = transformMethods;
@@ -1668,13 +1648,13 @@ define([
 
                                 self.setState({
                                     selectedMeshes: selectedMeshes,
-                                    selectedObject: scanedModel.matrix(mesh.model),
+                                    selectedObject: ScannedModel.matrix(mesh.model),
                                     objectDialogPosition: {
                                         left: position.x,
                                         top: position.y
                                     }
                                 }, function() {
-                                    scanedModel.cylinder.remove();
+                                    ScannedModel.cylinder.remove();
 
                                     if (1 === selectedMeshes.length && true === mesh.choose) {
                                         mesh.transformMethods.show();
@@ -1683,7 +1663,7 @@ define([
                                         mesh.transformMethods.hide();
                                     }
 
-                                    scanedModel.render();
+                                    ScannedModel.render();
                                 });
                             };
 
