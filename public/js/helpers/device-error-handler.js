@@ -5,6 +5,17 @@ define(['helpers/i18n'], function (i18n) {
 
     const self = {
         /**
+         * Error as constants
+         */
+        Errors: {
+            DEFAULT: 0,
+            RESOURCE_BUSY: 1,
+            TIMEOUT: 2,
+            TYPE_ERROR: 3,
+            UNKNOWN_COMMAND: 4,
+            KICKED: 5
+        },
+        /**
         * Translate device error into readable language
         * @param {String|String[]} error - some string or array
         */
@@ -16,7 +27,7 @@ define(['helpers/i18n'], function (i18n) {
 
             if (error.length) {
                 if (error.length == 3) {
-                    errorOutput = self.processErrorCode(error[2]);
+                    errorOutput = self.processToolheadErrorCode(error[2]);
                     // for wrong toolhead type;
                     if (error[1] === 'TYPE_ERROR') {
                         error.slice()
@@ -26,7 +37,7 @@ define(['helpers/i18n'], function (i18n) {
                         errorOutput = (error.length >= 2) ? lang.monitor[error.slice(0, 2).join('_')] : error.join('_');
                     }
                 } else {
-                    if (lang.error[error[0]]){
+                    if (lang.error[error[0]]) {
                         return lang.error[error[0]];
                     }
                     errorOutput = lang.monitor[error.slice(0, 2).join('_')];
@@ -42,7 +53,7 @@ define(['helpers/i18n'], function (i18n) {
          *  Process error code ( mostly for toolhead error )
          *  @param {String} argument - The error code 
          */
-        processErrorCode: (argument) => {
+        processToolheadErrorCode: (argument) => {
             if (Number(errorCode) === parseInt(errorCode)) {
                 let m = parseInt(errorCode).toString(2).split('').reverse();
                 let message = m.map((flag, index) => {
@@ -52,7 +63,33 @@ define(['helpers/i18n'], function (i18n) {
             } else {
                 return '';
             }
+        },
+        /**
+         * Process change filament response 
+         * @param {Object} response - Error response from change filament command 
+         */
+        processChangeFilamentResponse: (response) => {
+            if ('RESOURCE_BUSY' === response.error[0]) {
+                return self.Errors.DEFAULT;
+            }
+            else if ('TIMEOUT' === response.error[0]) {
+                return self.Errors.TIMEOUT
+            }
+            else if (response.info === 'TYPE_ERROR') {
+                return self.Errors.TYPE_ERROR
+            }
+            else if ('UNKNOWN_COMMAND' === response.error[0]) {
+                return self.Errors.UNKNOWN_COMMAND
+            }
+            else if ('KICKED' === response.error[0]) {
+                return self.Errors.KICKED
+            }
+            else {
+                return self.Errors.DEFAULT
+            }
         }
     };
+
+    self
     return self;
 });

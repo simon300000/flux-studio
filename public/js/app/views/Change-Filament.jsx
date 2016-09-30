@@ -125,6 +125,7 @@ define([
                         });
                     },
                     errorMessageHandler = (response) => {
+                        // Unused
                         var messageMap = lang.monitor,
                             subErrorIndex = 1,
                             allJoinedMessage = response.error.join('_'),
@@ -148,28 +149,34 @@ define([
 
                 DeviceMaster.selectDevice(self.props.device).then(function() {
                     DeviceMaster.changeFilament(type).progress(progress).done(done).fail(function(response) {
-                        if ('RESOURCE_BUSY' === response.error[0]) {
-                            AlertActions.showDeviceBusyPopup('change-filament-device-busy');
-                        }
-                        else if ('TIMEOUT' === response.error[0]) {
-                            DeviceMaster.closeConnection();
-                            AlertActions.showPopupError('change-filament-toolhead-no-response', lang.change_filament.toolhead_no_response);
-                            self.props.onClose();
-                        }
-                        else if (response.info === 'TYPE_ERROR') {
-                            AlertActions.showPopupError('change-filament-device-error', lang.change_filament.maintain_head_type_error);
-                            DeviceMaster.quitTask().then(function() {
-                                self.setState({ currentStep: steps.GUIDE });
-                            });
-                        }
-                        else if ('UNKNOWN_COMMAND' === response.error[0]) {
-                            AlertActions.showDeviceBusyPopup('change-filament-zombie', lang.change_filament.maintain_zombie);
-                        }
-                        else if ('KICKED' === response.error[0]) {
-                            self.props.onClose();
-                        }
-                        else {
-                            errorMessageHandler(response);
+                        switch(DeviceErrorHandler.translate(processChangeFilamentResponse)){
+                            case DeviceErrorHandler.Errors.RESOURCE_BUSY:
+                                AlertActions.showDeviceBusyPopup('change-filament-device-busy');
+                                break;
+                            case DeviceErrorHandler.Errors.TIMEOUT:
+                                DeviceMaster.closeConnection();
+                                AlertActions.showPopupError('change-filament-toolhead-no-response', lang.change_filament.toolhead_no_response);
+                                self.props.onClose();
+                                break;
+                            case DeviceErrorHandler.Errors.TYPE_ERROR:
+                                AlertActions.showPopupError('change-filament-device-error', lang.change_filament.maintain_head_type_error);
+                                DeviceMaster.quitTask().then(function() {
+                                    self.setState({ currentStep: steps.GUIDE });
+                                });
+                                break;
+                            case DeviceErrorHandler.Errors.UNKNOWN_COMMAND:
+                                AlertActions.showDeviceBusyPopup('change-filament-zombie', lang.change_filament.maintain_zombie);
+                                break;
+                            case DeviceErrorHandler.Errors.KICKED:
+                                self.props.onClose();
+                                break;
+                            default:
+                                DeviceMaster.quitTask().then(function() {
+                                    self.setState({ currentStep: steps.GUIDE });
+                                });
+                                AlertActions.showPopupError('change-filament-device-error', DeviceErrorHandler.translate(response.error));
+                                // errorMessageHandler(response);
+                                break;
                         }
                     });
                 });
