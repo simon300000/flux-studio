@@ -7,6 +7,13 @@ define(function() {
             no_vcredist: 'Please install Visual C++ Redistributable 2015',
             osx_10_9: 'FLUX Studio 目前不支援 OS X 10.9，敬請更新至更新的版本。'
         },
+        error: {
+            UNKNOWN_ERROR: "[UE] 請重啟 FLUX Studio",
+            OPERATION_ERROR: "[OE] 請重啟 FLUX Delta",
+            SUBSYSTEM_ERROR: "[SE] 請重啟 FLUX Delta",
+            UNKNOWN_COMMAND: "[UC] 請更新 Delta 韌體",
+            RESOURCE_BUSY: "[RB] 請重新啟動 Delta, 或再試一次"
+        },
         device_selection: {
             no_printers: '無法透過 Wi-Fi 偵測到 FLUX Delta，請檢查您與機器的網路連線是否在同個網路下 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/215394548">暸解更多</a>',
             module: 'MODULE',
