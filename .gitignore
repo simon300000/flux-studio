@@ -41,3 +41,8 @@ public/output.fc
 public/output.ini
 public/output.stl
 public/js/jsx
+
+#IDE
+typings
+jsconfig.json
+typings.json
