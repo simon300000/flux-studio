@@ -6,7 +6,8 @@ define(function() {
             default_lang : 'en',
             supported_langs : {
                 'en' : 'English',
-                'zh-tw' : '繁體中文'
+                'zh-tw' : '繁體中文',
+                'zh-cn' : '简体中文'
             }
         },
 
