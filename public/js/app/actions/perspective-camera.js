@@ -54,7 +54,7 @@ define([
             p12 = getMaterialFromImage('img/pc-bottom-hover.png');
 
         $.when(p01, p02, p03, p04, p05, p06, p07, p08, p09, p10, p11, p12)
-        .done((front, back, left, right, bottom, top, frontOn, backOn, leftOn, rightOn, bottomOn, topOn) => {
+        .done((front, back, right, left, bottom, top, frontOn, backOn, rightOn, leftOn, bottomOn, topOn) => {
             buildCube({
                 front, back, left, right, bottom, top,
                 frontOn, backOn, leftOn, rightOn, bottomOn, topOn
@@ -69,7 +69,7 @@ define([
             material.right = m.right;
             material.bottom = m.bottom;
             material.top = m.top;
-            material.hover = [m.frontOn, m.backOn, m.leftOn, m.rightOn, m.bottomOn, m.topOn];
+            material.hover = [m.backOn, m.frontOn, m.rightOn, m.leftOn, m.bottomOn, m.topOn];
             meshFaceMaterial    = new THREE.MeshFaceMaterial([material.right, material.left, material.back, material.front, material.top, material.bottom]);
 
             cube = new THREE.Mesh(geometry, meshFaceMaterial);
