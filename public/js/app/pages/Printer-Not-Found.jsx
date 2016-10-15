@@ -77,8 +77,7 @@ define([
                         'initialization': true
                     },
                     imgSrc = (
-                        'en' === i18n.getActiveLang() ?
-                        '/img/wifi-error-notify-en.png' :
+                        `/img/wifi-error-notify-${i18n.getActiveLang()}.png`
                     ),
                     content = (
                         <div className="device-not-found text-center">
