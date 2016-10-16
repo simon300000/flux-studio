@@ -62,12 +62,12 @@ define(function() {
                 quit: '退出'
             },
             file: {
-                label: '檔案',
-                import: '匯入',
-                save_fcode: '匯出工作',
-                save_scene: '匯出場景',
-                reset: '重置設定',
-                confirmReset: '是否確定要重置所有設定?'
+                label: '文件',
+                import: '导入',
+                save_fcode: '导出工作',
+                save_scene: '导出场景',
+                reset: '重置设置',
+                confirmReset: '是否确定要重置所有设置?'
             },
             edit: {
                 label: '編輯',
