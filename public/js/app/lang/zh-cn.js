@@ -103,13 +103,13 @@ define(function() {
                 fullscreen: '全频幕'
             },
             help: {
-                label: '說明',
-                help_center: '說明中心',
-                contact: '聯絡我們',
-                tutorial: '列印教學',
-                software_update: '軟體更新',
-                debug: '錯誤回報',
-                forum: '社群論壇'
+                label: '帮助',
+                help_center: '帮助中心',
+                contact: '联系我们',
+                tutorial: '打印教学',
+                software_update: '软件更新',
+                debug: '错误报告',
+                forum: '社区论坛'
             }
         },
         initialize: {
