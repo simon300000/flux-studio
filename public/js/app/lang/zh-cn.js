@@ -28,9 +28,9 @@ define(function() {
                 update_fail: '更新失败'
             },
             software: {
-                caption: 'FLUX Studio 有新的軟體更新',
-                message_pattern_1: 'FLUX Studio 有新的軟體更新。',
-                message_pattern_2: 'FLUX Software v%s 可使用 - 你的版本為 v%s.'
+                caption: 'FLUX Studio 有新的软件更新',
+                message_pattern_1: 'FLUX Studio 有新的软件更新。',
+                message_pattern_2: 'FLUX Software v%s 可使用 - 你的版本为 v%s.'
             },
             toolhead: {
                 caption: 'FLUX 工具頭有新的软件更新',
