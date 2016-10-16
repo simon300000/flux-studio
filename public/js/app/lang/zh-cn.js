@@ -70,13 +70,13 @@ define(function() {
                 confirmReset: '是否确定要重置所有设置?'
             },
             edit: {
-                label: '編輯',
-                duplicate: '重製',
-                rotate: '旋轉',
-                scale: '縮放',
+                label: '编辑',
+                duplicate: '复制',
+                rotate: '旋转',
+                scale: '缩放',
                 reset: '重置',
-                clear: '清除場景',
-                undo: '復原'
+                clear: '清除场景',
+                undo: '撤销'
             },
             device: {
                 label: '机器',
