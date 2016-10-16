@@ -8,7 +8,7 @@ define(function() {
             osx_10_9: 'FLUX Studio 目前不支持 OS X 10.9，请升级至更新的版本。'
         },
         device_selection: {
-            no_printers: '无法通过 Wi-Fi 搜索到 FLUX Delta，请检查您与机器的网络连接是否在同一个内网 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/215394548">详细信息</a>',
+            no_printers: '无法通过 Wi-Fi 搜索到 FLUX Delta，请检查您与机器的网络连接是否在同一个局域网 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/215394548">详细信息</a>',
             module: 'MODULE',
             status: 'STATUS'
         },
