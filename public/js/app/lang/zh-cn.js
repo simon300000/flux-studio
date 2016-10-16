@@ -47,10 +47,10 @@ define(function() {
                 waiting: '请确认已安装工具头'
             },
             updating: '更新中...',
-            skip: '跳過此版本',
+            skip: '跳过此版本',
             later: '稍候',
-            install: '下載',
-            upload: '上傳'
+            install: '下载',
+            upload: '上传'
         },
         topmenu: {
             version: '版本',
