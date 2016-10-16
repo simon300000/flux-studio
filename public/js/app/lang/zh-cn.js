@@ -98,9 +98,9 @@ define(function() {
                 finish: '完成'
             },
             window: {
-                label: '視窗',
+                label: '窗口',
                 minimize: '最小化',
-                fullscreen: '全螢幕'
+                fullscreen: '全频幕'
             },
             help: {
                 label: '說明',
