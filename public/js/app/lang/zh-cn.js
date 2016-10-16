@@ -33,18 +33,18 @@ define(function() {
                 message_pattern_2: 'FLUX Software v%s 可使用 - 你的版本为 v%s.'
             },
             toolhead: {
-                caption: 'FLUX 工具頭有新的软件更新',
+                caption: 'FLUX 工具头有新的软件更新',
                 message_pattern_1: '"%s" 有新的软件更新。',
                 message_pattern_2: 'FLUX Toolhead Firmware v%s 可使用',
                 latest_firmware: {
                     caption: '软件更新',
-                    message: '软件已經是最新版本'
+                    message: '软件已经是最新版本'
                 },
-                confirm: '上傳',
-                upload_file: '软件上傳',
-                update_success: '软件更新上傳成功',
-                update_fail: '更新失敗',
-                waiting: '请確認已裝置工具頭'
+                confirm: '上传',
+                upload_file: '软件上传',
+                update_success: '软件更新上传成功',
+                update_fail: '更新失败',
+                waiting: '请确认已安装工具头'
             },
             updating: '更新中...',
             skip: '跳過此版本',
