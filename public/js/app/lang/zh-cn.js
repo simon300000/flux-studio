@@ -54,12 +54,12 @@ define(function() {
         },
         topmenu: {
             version: '版本',
-            sure_to_quit: '確定要結束 FLUX Studio?',
+            sure_to_quit: '确定要退出 FLUX Studio?',
             flux: {
                 label: 'Flux',
-                about: '關於 FLUX studio',
-                preferences: '偏好設定',
-                quit: '結束'
+                about: '关于 FLUX studio',
+                preferences: '设置',
+                quit: '退出'
             },
             file: {
                 label: '檔案',
