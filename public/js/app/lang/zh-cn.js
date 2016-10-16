@@ -8,7 +8,7 @@ define(function() {
             osx_10_9: 'FLUX Studio 目前不支持 OS X 10.9，请升级至更新的版本。'
         },
         device_selection: {
-            no_printers: '无法通过 Wi-Fi 搜索到 FLUX Delta，请检查您与机器的网络连接是否在同一个内网 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/215394548">了解更多</a>',
+            no_printers: '无法通过 Wi-Fi 搜索到 FLUX Delta，请检查您与机器的网络连接是否在同一个内网 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/215394548">详细信息</a>',
             module: 'MODULE',
             status: 'STATUS'
         },
@@ -188,22 +188,22 @@ define(function() {
 
             // errors
             errors: {
-                error: '錯誤',
-                not_found: '無法找到 FLUX Delta',
+                error: '错误',
+                not_found: '无法找到 FLUX Delta',
                 not_support: '请更新 Delta 软件到 v1.1 以上',
 
                 keep_connect: {
-                    caption: '無法透過 USB 连接',
-                    content: '別擔心！请確認電源已被開啟及使用 Micro-Usb 连接机器，並正確安裝驅動程式。<a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/215327328">瞭解更多</a>'
+                    caption: '无法通过 USB 连接',
+                    content: '别担心！请确认电源已开启以及使用 Micro-Usb 连接机器，并正确安装驱动程序。<a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/215327328">详细信息</a>'
                 },
 
                 wifi_connection: {
-                    caption: '無法與此 Wi-Fi 連線',
-                    connecting_fail: '请確認信號強度以及密碼正確'
+                    caption: '无法连接此 Wi-Fi',
+                    connecting_fail: '请确认信号强度以及密码正确'
                 },
 
                 select_wifi: {
-                    ap_mode_fail: '基地台模式連線設定失敗'
+                    ap_mode_fail: '基地台模式设定失败'
                 }
             }
         },
@@ -887,23 +887,23 @@ define(function() {
             record                              : 'RECORD',
             camera                              : '監控',
             connecting                          : '連線中，请稍候',
-            HEAD_OFFLINE                        : '#110 沒有偵測到工具頭\n请確認工具頭傳輸線完整插入 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218183157">暸解更多</a>',
+            HEAD_OFFLINE                        : '#110 沒有偵測到工具頭\n请確認工具頭傳輸線完整插入 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218183157">详细信息</a>',
             HEAD_ERROR_CALIBRATING              : '#112 工具頭校正失誤\n请重新裝載工具頭，並確認磁鐵關節的附著',
-            HEAD_ERROR_FAN_FAILURE              : '#113 風扇無法轉動\n请嘗試用細針戳一下 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/217732178">暸解更多</a>',
-            HEAD_ERROR_HEAD_OFFLINE             : '#110 沒有偵測到工具頭\n请確認工具頭傳輸線完整插入 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218183157">暸解更多</a>',
+            HEAD_ERROR_FAN_FAILURE              : '#113 風扇無法轉動\n请嘗試用細針戳一下 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/217732178">详细信息</a>',
+            HEAD_ERROR_HEAD_OFFLINE             : '#110 沒有偵測到工具頭\n请確認工具頭傳輸線完整插入 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218183157">详细信息</a>',
             HEAD_ERROR_TYPE_ERROR               : '#111 偵測到錯誤工具頭\n请安裝正確的對應工具頭',
-            HEAD_ERROR_INTLK_TRIG               : '#116 偵測到雕刻工具頭傾斜\n请確認金屬棒正確連結，雕刻頭與握架緊密結合以繼續<a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/217085937">瞭解更多</a>',
-            HEAD_ERROR_RESET                    : '#114 工具頭傳輸線接觸不良\n请確認工具頭傳輸線完整插入以繼續，如持續發生此問題，请聯繫 FLUX 客服 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218183167">暸解更多</a>',
+            HEAD_ERROR_INTLK_TRIG               : '#116 偵測到雕刻工具頭傾斜\n请確認金屬棒正確連結，雕刻頭與握架緊密結合以繼續<a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/217085937">详细信息</a>',
+            HEAD_ERROR_RESET                    : '#114 工具頭傳輸線接觸不良\n请確認工具頭傳輸線完整插入以繼續，如持續發生此問題，请聯繫 FLUX 客服 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218183167">详细信息</a>',
             HEAD_ERROR_TILT                     : '#162 偵測到工具頭傾斜\n请確認球型關節正確附著以繼續',
             HEAD_ERROR_SHAKE                    : '#162 偵測到工具頭傾斜\n请確認球型關節正確附著以繼續',
-            HEAD_ERROR_HARDWARE_FAILURE         : '#164 工具頭溫度異常\n请聯繫 FLUX 客服<a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218415378">暸解更多</a>',
+            HEAD_ERROR_HARDWARE_FAILURE         : '#164 工具頭溫度異常\n请聯繫 FLUX 客服<a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218415378">详细信息</a>',
             'HEAD_ERROR_?'                      : '#199 Toolhead error\nCheck if the toolhead is abnormal',
-            HARDWARE_ERROR_FILAMENT_RUNOUT      : '#121 沒有偵測到線料\n请重新插入新的線料 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931757">瞭解更多</a>',
-            HARDWARE_ERROR_0                    : '#121 沒有偵測到線料\n请重新插入新的線料 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931757">瞭解更多</a>',
+            HARDWARE_ERROR_FILAMENT_RUNOUT      : '#121 沒有偵測到線料\n请重新插入新的線料 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931757">详细信息</a>',
+            HARDWARE_ERROR_0                    : '#121 沒有偵測到線料\n请重新插入新的線料 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931757">详细信息</a>',
             HARDWARE_ERROR_PLATE_MISSING        : '#122 沒有偵測到工作平台\n请放上工作平台金屬板',
-            HARDWARE_ERROR_ZPROBE_ERROR         : '#123 水平校正失敗\n请移除可能影響校正的物體（噴嘴殘料、工作平台上雜質）<a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931767">暸解更多</a>',
-            HARDWARE_ERROR_CONVERGENCE_FAILED   : '#123 水平校正失敗\n请移除可能影響校正的物體（噴嘴殘料、工作平台上雜質）<a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931767">暸解更多</a>',
-            HARDWARE_ERROR_HOME_FAILED          : '#124 原點校正失敗\n请排除軌道上異物，確定傳輸線不會被夾到 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931807">暸解更多</a>',
+            HARDWARE_ERROR_ZPROBE_ERROR         : '#123 水平校正失敗\n请移除可能影響校正的物體（噴嘴殘料、工作平台上雜質）<a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931767">详细信息</a>',
+            HARDWARE_ERROR_CONVERGENCE_FAILED   : '#123 水平校正失敗\n请移除可能影響校正的物體（噴嘴殘料、工作平台上雜質）<a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931767">详细信息</a>',
+            HARDWARE_ERROR_HOME_FAILED          : '#124 原點校正失敗\n请排除軌道上異物，確定傳輸線不會被夾到 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931807">详细信息</a>',
             HARDWARE_ERROR_MAINBOARD_ERROR      : '#401 主板沒有回應。请聯繫 FLUX 客服。',
             HARDWARE_ERROR_SUBSYSTEM_ERROR      : '#402 子系統沒有回應。请聯繫 FLUX 客服。',
             WRONG_HEAD                          : '请更換成列印工具頭',
@@ -914,8 +914,8 @@ define(function() {
             SUBSYSTEM_ERROR                     : '#402 子系統沒有回應。请聯繫 FLUX 客服。',
             HARDWARE_FAILURE                    : '裝置錯誤\n请重新啟動机器',
             MAINBOARD_OFFLINE                   : '裝置錯誤\n请重新啟動机器',
-            G28_FAILED                          : '#124 原點校正失敗\n请排除軌道上異物，並重新插拔工具頭连接線 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931807">暸解更多</a>',
-            FILAMENT_RUNOUT_0                   : '#121 沒有偵測到線料\n请重新插入新的線料 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931757">瞭解更多</a>',
+            G28_FAILED                          : '#124 原點校正失敗\n请排除軌道上異物，並重新插拔工具頭连接線 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931807">详细信息</a>',
+            FILAMENT_RUNOUT_0                   : '#121 沒有偵測到線料\n请重新插入新的線料 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218931757">详细信息</a>',
             processing                          : '處理中',
             savingPreview                       : '正在產生預覽圖',
             hour                                : '小時',
@@ -1045,8 +1045,8 @@ define(function() {
                 '4': '#162 偵測到工具頭傾斜\n请確認球型關節正確附著以繼續',
                 '5': '#162 偵測到工具頭傾斜\n请確認球型關節正確附著以繼續',
                 '6': '#119 列印工具頭無法控制溫度，请聯繫 FLUX 客服。',
-                '7': '#113 風扇無法轉動\n请嘗試用細針戳一下 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/217732178">暸解更多</a>',
-                '8': '#116 偵測到雕刻工具頭傾斜\n请確認金屬棒正確連結，雕刻頭與握架緊密結合以繼續<a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/217085937">瞭解更多</a>',
+                '7': '#113 風扇無法轉動\n请嘗試用細針戳一下 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/217732178">详细信息</a>',
+                '8': '#116 偵測到雕刻工具頭傾斜\n请確認金屬棒正確連結，雕刻頭與握架緊密結合以繼續<a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/217085937">详细信息</a>',
                 '9': '#118 列印工具頭無法加溫，请聯繫 FLUX 客服。'
             }
         },
@@ -1066,7 +1066,7 @@ define(function() {
             auto_emerging: '请插入線料',
             maintain_head_type_error: '列印工具頭未正確安裝',
             maintain_zombie: '请重新啟動机器',
-            toolhead_no_response: '#117 列印模組沒有回應 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218347477">暸解更多</a>'
+            toolhead_no_response: '#117 列印模組沒有回應 <a target="_blank" href="https://flux3dp.zendesk.com/hc/zh-tw/articles/218347477">详细信息</a>'
         },
         input_machine_password: {
             require_password: '"%s" 需要密碼',
