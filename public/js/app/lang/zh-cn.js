@@ -129,8 +129,8 @@ define(function() {
             require_device_name: '名稱欄位為必填',
             select_language: '请选择你想使用的语言',
             change_password: {
-                caption: '密碼更改',
-                content: '確定要更改密碼嗎?'
+                caption: '密码更改',
+                content: '确定要更改密码吗?'
             },
             connect_flux: '连接 FLUX Delta',
             via_usb: '使用 USB',
