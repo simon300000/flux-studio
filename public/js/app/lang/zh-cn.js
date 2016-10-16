@@ -17,15 +17,15 @@ define(function() {
             firmware: {
                 caption: 'FLUX Delta 有新的软件更新',
                 message_pattern_1: '"%s" 有新的软件更新。',
-                message_pattern_2: 'FLUX 软件 v%s 可使用 - 你的版本為 v%s.',
+                message_pattern_2: 'FLUX 软件 v%s 可使用 - 你的版本为 v%s.',
                 latest_firmware: {
                     caption: '软件更新',
-                    message: '软件已經是最新版本'
+                    message: '软件已经是最新版本'
                 },
-                confirm: '上傳',
-                upload_file: '软件上傳',
-                update_success: '软件更新上傳成功',
-                update_fail: '更新失敗'
+                confirm: '上传',
+                upload_file: '软件上传',
+                update_success: '软件更新上传成功',
+                update_fail: '更新失败'
             },
             software: {
                 caption: 'FLUX Studio 有新的軟體更新',
